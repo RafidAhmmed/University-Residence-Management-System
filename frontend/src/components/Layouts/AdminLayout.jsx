@@ -1,0 +1,192 @@
+import React, { useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { 
+  LogOut, 
+  LayoutDashboard, 
+  Home, 
+  User, 
+  Calendar,
+  Users,
+  Mail,
+  Menu,
+  X,
+  Image as ImageIcon,
+  UserCog,
+  MailPlus
+} from 'lucide-react';
+
+const AdminLayout = () => {
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Changed default to false for mobile-first
+
+  // Mock user data
+  const mockUser = {
+    name: 'Admin User',
+    role: 'admin'
+  };
+
+  const menuItems = [
+    {
+      path: '/admin',
+      icon: LayoutDashboard,
+      label: 'Dashboard',
+      exact: true
+    },
+    {
+      path: '/admin/manage-users',
+      icon: UserCog,
+      label: 'Manage Users'
+    },
+    {
+      path: '/admin/send-email',
+      icon: MailPlus,
+      label: 'Send Email'
+    },
+    {
+      path: '/admin/schedules',
+      icon: Calendar,
+      label: 'Tour Schedules'
+    },
+    {
+      path: '/admin/gallery',
+      icon: ImageIcon,
+      label: 'Gallery'
+    },
+    {
+      path: '/admin/profile',
+      icon: User,
+      label: 'My Profile'
+    }
+  ];
+
+  const isActive = (path, exact = false) => {
+    if (exact) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 h-full bg-gradient-to-b from-[#19aaba] to-[#158c99] text-white transition-all duration-300 z-40 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      } w-64 lg:w-64`}>
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-cyan-600/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <LayoutDashboard size={24} />
+              <span className="text-xl font-bold">Admin Panel</span>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors lg:hidden"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="p-4 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path, item.exact);
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  active
+                    ? 'bg-white text-[#19aaba] shadow-lg font-semibold'
+                    : 'hover:bg-white/10 text-white'
+                }`}
+              >
+                <Icon size={20} className="flex-shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Back to Site Link */}
+        <div className="absolute bottom-20 left-0 right-0 p-4">
+          <Link
+            to="/"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-all text-cyan-100 hover:text-white"
+          >
+            <Home size={20} className="flex-shrink-0" />
+            <span>Back to Site</span>
+          </Link>
+        </div>
+
+        {/* Logout Button */}
+        <div className="absolute bottom-4 left-0 right-0 p-4">
+          <button
+            onClick={() => {/* Mock logout - do nothing */}}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/20 transition-all border border-white/20 hover:border-red-300"
+          >
+            <LogOut size={20} className="flex-shrink-0" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className={`flex-1 w-full transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-64'}`}>
+        {/* Top Navigation Bar */}
+        <nav className="bg-white shadow-md border-b border-gray-200 sticky top-0 z-20">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              {/* Mobile Menu Button + Page Title */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Menu size={24} className="text-gray-600" />
+                </button>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                  {location.pathname === '/admin' && 'Dashboard'}
+                  {location.pathname === '/admin/manage-users' && 'Manage Users'}
+                  {location.pathname === '/admin/send-email' && 'Send Email'}
+                  {location.pathname === '/admin/schedules' && 'Tour Schedules'}
+                  {location.pathname === '/admin/gallery' && 'Gallery Management'}
+                  {location.pathname === '/admin/profile' && 'My Profile'}
+                </h2>
+              </div>
+
+              {/* User Info */}
+              <Link to="/admin/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-semibold text-gray-800">{mockUser.name}</p>
+                  <p className="text-xs text-gray-600 uppercase">{mockUser.role}</p>
+                </div>
+                <UserAvatar user={mockUser} size="md" showBorder borderColor="border-cyan-200" />
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        {/* Page Content */}
+        <main className="min-h-[calc(100vh-4rem)]">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

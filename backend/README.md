@@ -48,11 +48,12 @@ This is the backend API for the Hall Management system, built with Express.js an
 ## API Endpoints
 
 ### Users
-- `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get user by ID
-- `POST /api/users` - Create a new user
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user
+- `POST /api/users/register` - Register a new user
+- `POST /api/users/login` - Login user (returns JWT token)
+- `GET /api/users` - Get all users (requires auth)
+- `GET /api/users/:id` - Get user by ID (requires auth)
+- `PUT /api/users/:id` - Update user (requires auth)
+- `DELETE /api/users/:id` - Delete user (requires auth)
 
 ## Technologies Used
 

@@ -16,36 +16,61 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    const initAuth = async () => {
-      // Mock authentication - always logged in as admin
-      const mockUser = {
-        id: 1,
-        name: 'Admin User',
-        email: 'admin@example.com',
-        role: 'admin'
-      };
-      setUser(mockUser);
-      setLoading(false);
-    };
-
-    initAuth();
+    const token = localStorage.getItem('token');
+    if (token) {
+      // TODO: Validate token with backend
+      // For now, assume valid
+      setToken(token);
+      // TODO: Fetch user data from token
+    }
+    setLoading(false);
   }, []);
 
   const login = async (credentials) => {
-    // Mock login - always successful
-    const mockUser = {
-      id: 1,
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin'
-    };
-    const mockToken = 'mock-jwt-token';
-    
-    localStorage.setItem('token', mockToken);
-    setToken(mockToken);
-    setUser(mockUser);
-    
-    return { data: { user: mockUser, token: mockToken } };
+    try {
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -72,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    register,
     logout,
     isAdmin,
     isAuthenticated,

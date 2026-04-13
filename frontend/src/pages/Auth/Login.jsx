@@ -18,11 +18,13 @@ import { toast } from "sonner";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isAdmin } = useAuth();
+  const { login, register, isAuthenticated, isAdmin } = useAuth();
 
+  const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
     studentId: "",
     password: "",
+    name: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -56,6 +58,15 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
+
+    if (isRegister) {
+      // Validate Name
+      if (!formData.name.trim()) {
+        newErrors.name = "Name is required";
+      } else if (formData.name.trim().length < 2) {
+        newErrors.name = "Name must be at least 2 characters";
+      }
+    }
 
     // Validate Student ID
     if (!formData.studentId.trim()) {
@@ -91,26 +102,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await login(formData);
+      if (isRegister) {
+        await register(formData);
+        toast.success("Registration successful! Please login.");
+        setIsRegister(false);
+        setFormData({ studentId: formData.studentId, password: "", name: "" });
+      } else {
+        const response = await login(formData);
+        toast.success("Login successful!");
 
-      toast.success("Login successful!");
-
-      // Redirect based on role
-      const from =
-        location.state?.from?.pathname ||
-        (response.data.user.role === "admin" ? "/admin" : "/user/profile");
-      navigate(from, { replace: true });
+        // Redirect based on role
+        const from =
+          location.state?.from?.pathname ||
+          (response.user.role === "admin" ? "/admin" : "/user/profile");
+        navigate(from, { replace: true });
+      }
     } catch (error) {
-      console.error("Login error:", error);
-      const errorMessage =
-        error.response?.data?.message || "Invalid Student ID or password";
-      setErrors({ submit: errorMessage });
-      toast.error(errorMessage);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#19aaba] via-[#158c99] to-[#116d77] flex items-center justify-center py-6 sm:py-8 md:py-12 px-3 sm:px-4 lg:px-8">
       <div className="absolute inset-0 bg-black/10"></div>
@@ -143,15 +155,59 @@ const Login = () => {
 
               <div className="mb-6">
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                  Welcome Back!
+                  {isRegister ? "Create Account" : "Welcome Back!"}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Enter your Student ID and password to access the hall
-                  management system
+                  {isRegister
+                    ? "Register for the hall management system"
+                    : "Enter your Student ID and password to access the hall management system"
+                  }
                 </p>
               </div>
 
+              <div className="mb-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegister(!isRegister);
+                    setErrors({});
+                    setFormData({ studentId: "", password: "", name: "" });
+                  }}
+                  className="text-[#19aaba] hover:text-[#17a2b8] text-sm font-medium"
+                >
+                  {isRegister ? "Already have an account? Login" : "Don't have an account? Register"}
+                </button>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+                {/* Name Input - Only for Register */}
+                {isRegister && (
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-semibold text-gray-700 mb-2"
+                    >
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className={`block w-full pl-3 sm:pl-4 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-[#19aaba] focus:border-transparent transition-colors ${
+                          errors.name ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                    </div>
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Student ID Input */}
                 <div>
                   <label
@@ -265,12 +321,12 @@ const Login = () => {
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Logging in...</span>
+                      <span>{isRegister ? "Registering..." : "Logging in..."}</span>
                     </>
                   ) : (
                     <>
                       <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>Login to Hall System</span>
+                      <span>{isRegister ? "Create Account" : "Log In"}</span>
                     </>
                   )}
                 </button>

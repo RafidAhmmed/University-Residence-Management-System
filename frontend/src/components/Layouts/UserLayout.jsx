@@ -1,11 +1,12 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { User, LogOut, Home } from 'lucide-react';
+import { User, LogOut, Home, MessageSquare, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 const UserLayout = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -16,18 +17,43 @@ const UserLayout = () => {
     }
   };
 
+  const navItems = [
+    { path: '/user/profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
+    { path: '/user/notices', label: 'Notices', icon: <Bell className="w-4 h-4" /> },
+    { path: '/user/complaint', label: 'Submit Complaint', icon: <MessageSquare className="w-4 h-4" /> },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Simple Navbar */}
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-6">
               <Link to="/" className="flex items-center gap-2 text-[#19aaba] hover:text-[#158c99]">
                 <Home className="w-5 h-5" />
                 <span className="font-semibold">Hall Management</span>
               </Link>
+
+              {/* Navigation Links */}
+              <div className="hidden md:flex space-x-4">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      location.pathname === item.path
+                        ? 'bg-[#19aaba] text-white'
+                        : 'text-gray-700 hover:text-[#19aaba] hover:bg-gray-100'
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </div>
+
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4 text-gray-500" />

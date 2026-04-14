@@ -1,0 +1,6 @@
+{
+  "name": "Admin User",
+  "studentId": "ADMIN001",
+  "password": "admin123",
+  "role": "admin"
+}

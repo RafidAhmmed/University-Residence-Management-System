@@ -10,7 +10,11 @@ import ScrollTop from './components/ScrollTop/ScrollTop';
 import HomePage from './pages/Public/HomePage';
 import Login from './pages/Auth/Login';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminComplaintsPage from './pages/Admin/AdminComplaintsPage';
+import AdminPublishNoticePage from './pages/Admin/AdminPublishNoticePage';
 import UserProfile from './pages/User/UserProfile';
+import ComplaintPage from './pages/User/ComplaintPage';
+import NoticePage from './pages/User/NoticePage';
 import Notice from './pages/Public/Notice';
 import Facilities from './pages/Public/Facilities';
 import RoomAllocation from './pages/Public/RoomAllocation';
@@ -45,11 +49,15 @@ function App() {
           {/* Admin Routes (Protected) */}
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route index element={<AdminDashboard />} />
+            <Route path="complaints" element={<AdminComplaintsPage />} />
+            <Route path="publish-notice" element={<AdminPublishNoticePage />} />
           </Route>
 
           {/* User Routes (Protected) */}
           <Route path="/user" element={<UserRoute><UserLayout /></UserRoute>}>
             <Route path="profile" element={<UserProfile />} />
+            <Route path="complaint" element={<ComplaintPage />} />
+            <Route path="notices" element={<NoticePage />} />
           </Route>
 
           {/* 404 Route */}

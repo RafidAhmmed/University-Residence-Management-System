@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { 
-  LogOut, 
-  LayoutDashboard, 
-  Home, 
-  User, 
+import {
+  LogOut,
+  LayoutDashboard,
+  Home,
+  User,
   Calendar,
   Users,
   Mail,
@@ -12,17 +12,27 @@ import {
   X,
   Image as ImageIcon,
   UserCog,
-  MailPlus
+  MailPlus,
+  MessageSquare,
+  Bell
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
+import UserAvatar from '../Common/UserAvatar';
 
 const AdminLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Changed default to false for mobile-first
+  const { user, logout } = useAuth();
 
-  // Mock user data
-  const mockUser = {
-    name: 'Admin User',
-    role: 'admin'
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed');
+    }
   };
 
   const menuItems = [
@@ -31,6 +41,16 @@ const AdminLayout = () => {
       icon: LayoutDashboard,
       label: 'Dashboard',
       exact: true
+    },
+    {
+      path: '/admin/complaints',
+      icon: MessageSquare,
+      label: 'Manage Complaints'
+    },
+    {
+      path: '/admin/publish-notice',
+      icon: Bell,
+      label: 'Publish Notice'
     },
     {
       path: '/admin/manage-users',
@@ -135,7 +155,7 @@ const AdminLayout = () => {
         {/* Logout Button */}
         <div className="absolute bottom-4 left-0 right-0 p-4">
           <button
-            onClick={() => {/* Mock logout - do nothing */}}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/20 transition-all border border-white/20 hover:border-red-300"
           >
             <LogOut size={20} className="flex-shrink-0" />
@@ -171,10 +191,10 @@ const AdminLayout = () => {
               {/* User Info */}
               <Link to="/admin/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-gray-800">{mockUser.name}</p>
-                  <p className="text-xs text-gray-600 uppercase">{mockUser.role}</p>
+                  <p className="text-sm font-semibold text-gray-800">{user?.name || 'Admin'}</p>
+                  <p className="text-xs text-gray-600 uppercase">{user?.role || 'admin'}</p>
                 </div>
-                <UserAvatar user={mockUser} size="md" showBorder borderColor="border-cyan-200" />
+                <UserAvatar user={user} size="md" showBorder borderColor="border-cyan-200" />
               </Link>
             </div>
           </div>

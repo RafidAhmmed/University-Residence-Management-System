@@ -10,6 +10,7 @@ import ScrollTop from './components/ScrollTop/ScrollTop';
 import HomePage from './pages/Public/HomePage';
 import Login from './pages/Auth/Login';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import UserProfile from './pages/User/UserProfile';
 import Notice from './pages/Public/Notice';
 import Facilities from './pages/Public/Facilities';
 import RoomAllocation from './pages/Public/RoomAllocation';
@@ -44,6 +45,11 @@ function App() {
           {/* Admin Routes (Protected) */}
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route index element={<AdminDashboard />} />
+          </Route>
+
+          {/* User Routes (Protected) */}
+          <Route path="/user" element={<UserRoute><UserLayout /></UserRoute>}>
+            <Route path="profile" element={<UserProfile />} />
           </Route>
 
           {/* 404 Route */}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api/api';
 
 const AuthContext = createContext();
 
@@ -17,67 +18,49 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      // TODO: Validate token with backend
-      // For now, assume valid
+    const storedUser = localStorage.getItem('user');
+    if (token && storedUser) {
       setToken(token);
-      // TODO: Fetch user data from token
+      setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
   const login = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
-      }
-
-      const data = await response.json();
+      const response = await api.post('/auth/login', credentials);
+      const data = response.data;
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
       return data;
     } catch (error) {
-      throw error;
+      throw new Error(error.response?.data?.error || 'Login failed');
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
-      }
-
-      const data = await response.json();
+      const response = await api.post('/auth/register', userData);
+      const data = response.data;
       return data;
     } catch (error) {
-      throw error;
+      throw new Error(error.response?.data?.error || 'Registration failed');
     }
   };
 
   const logout = async () => {
-    // Mock logout
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+    }
   };
 
   const isAdmin = () => {

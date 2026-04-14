@@ -302,7 +302,7 @@ const UserProfile = () => {
                       name="bloodGroup"
                       value={formData.bloodGroup}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#19aaba] focus:border-transparent"
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#19aaba] focus:border-transparent ${isProfileLocked ? 'appearance-none' : ''}`}
                       disabled={isProfileLocked}
                     >
                       <option value="">Select Blood Group</option>

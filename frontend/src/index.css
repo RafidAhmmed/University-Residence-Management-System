@@ -50,6 +50,15 @@ html {
   overflow: hidden;
 }
 
+/* Hide select arrow when disabled */
+select:disabled {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

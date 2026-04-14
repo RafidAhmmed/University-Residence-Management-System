@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'user'],
     default: 'user',
   },
+  tokens: [{
+    type: String,
+  }],
 }, {
   timestamps: true,
 });

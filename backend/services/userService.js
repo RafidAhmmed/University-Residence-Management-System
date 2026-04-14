@@ -49,6 +49,10 @@ class UserService {
       expiresIn: '1h',
     });
 
+    user.tokens = user.tokens || [];
+    user.tokens.push(token);
+    await user.save();
+
     return { user: { id: user._id, name: user.name, studentId: user.studentId, role: user.role }, token };
   }
 }

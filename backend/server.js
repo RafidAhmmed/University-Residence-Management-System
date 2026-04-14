@@ -19,10 +19,11 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hall_mana
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/', (req, res) => {
+app.get('/', (req, res) => {
   res.send('Welcome to the Hall Management System API');
 });
 
+app.use('/api/auth', require('./routers/authRouter'));
 app.use('/api/users', require('./routers/userRouter'));
 
 const PORT = process.env.PORT || 5000;

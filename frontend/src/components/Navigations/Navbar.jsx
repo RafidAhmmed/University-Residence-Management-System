@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const isActive = (path) => {
     if (path === "/") {
@@ -24,7 +26,26 @@ const Navbar = () => {
     await logout();
     navigate("/");
     setIsMenuOpen(false);
+    setIsProfileDropdownOpen(false);
   };
+
+  const toggleProfileDropdown = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className="bg-gradient-to-r from-[#19aaba] via-[#158c99] to-[#116d77] shadow-lg sticky top-0 z-50">
@@ -104,13 +125,35 @@ const Navbar = () => {
 
             {/* Auth Buttons */}
             {isAuthenticated() ? (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 xl:px-6 py-2 bg-red-500 text-white rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg hover:bg-red-600"
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleProfileDropdown}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/10 text-white rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg hover:bg-white/20"
+                >
+                  <User size={16} />
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <Link
+                      to="/user/profile"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    >
+                      <User size={16} />
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => navigate("/login")}
@@ -209,13 +252,23 @@ const Navbar = () => {
               {/* Auth Buttons - Mobile */}
               {isAuthenticated() ? (
                 <div className="pt-4 border-t border-white/20">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:bg-red-600"
-                  >
-                    <LogOut size={16} />
-                    <span>Logout</span>
-                  </button>
+                  <div className="space-y-2">
+                    <Link
+                      to="/user/profile"
+                      className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-white/10 text-white rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:bg-white/20"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User size={16} />
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-red-500 text-white rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:bg-red-600"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button

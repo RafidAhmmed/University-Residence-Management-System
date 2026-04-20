@@ -73,7 +73,7 @@ const HomePage = () => {
     { number: "3000+", label: "Students Capacity", icon: <Users className="w-6 h-6" /> },
     { number: "500+", label: "Rooms Available", icon: <Bed className="w-6 h-6" /> },
     { number: "24/7", label: "Security Service", icon: <Shield className="w-6 h-6" /> },
-    { number: "15+", label: "Years Experience", icon: <Award className="w-6 h-6" /> }
+    // { number: "15+", label: "Years Experience", icon: <Award className="w-6 h-6" /> }
     // { number: "100%", label: "Satisfaction Rate", icon: <CheckCircle2 className="w-6 h-6" /> }
   ];
 
@@ -134,7 +134,7 @@ const HomePage = () => {
                 and secure living environment.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              {/* <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link
                   to="/login"
                   className="group bg-white text-[#19aaba] px-8 py-4 rounded-full font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
@@ -142,11 +142,11 @@ const HomePage = () => {
                   Student Portal
                   <Users className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-              </div>
+              </div> */}
             </div>
 
             {/* Right Content - Stats Card */}
-            <div className="hidden md:block">
+            <div className="block">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#19aaba] to-[#22c5d7] rounded-3xl blur-3xl opacity-30 animate-pulse"></div>
                 <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl space-y-6">
@@ -157,22 +157,24 @@ const HomePage = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
-                      <div className="text-4xl font-bold mb-1">4</div>
-                      <p className="text-xs uppercase font-semibold text-white/80">Halls</p>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
-                      <div className="text-4xl font-bold mb-1">3000+</div>
-                      <p className="text-xs uppercase font-semibold text-white/80">Students</p>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
-                      <div className="text-4xl font-bold mb-1">500+</div>
-                      <p className="text-xs uppercase font-semibold text-white/80">Rooms</p>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
-                      <div className="text-4xl font-bold mb-1 animate-pulse">24/7</div>
-                      <p className="text-xs uppercase font-semibold text-white/80">Security</p>
+                  <div className="flex justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold mb-1">4</div>
+                        <p className="text-xs uppercase font-semibold text-white/80">Halls</p>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold mb-1">3000+</div>
+                        <p className="text-xs uppercase font-semibold text-white/80">Students</p>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold mb-1">500+</div>
+                        <p className="text-xs uppercase font-semibold text-white/80">Rooms</p>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold mb-1 animate-pulse">24/7</div>
+                        <p className="text-xs uppercase font-semibold text-white/80">Security</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -198,7 +200,7 @@ const HomePage = () => {
             </h2>
             <p className="text-lg text-gray-600">Comprehensive overview of our residential facilities</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div 
                 key={index} 
@@ -258,40 +260,46 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Shahid Moushiur Rahman Hall", capacity: "500", facilities: ["Wi-Fi", "Common Room", "Study Area", "Cafetaria"], icon: <Building2 className="w-5 h-5" /> },
-              { name: "Munshi Meherullah Hall", capacity: "1000", facilities: ["Wi-Fi", "Common Room", "Study Area", "Cafetaria"], icon: <Home className="w-5 h-5" /> },
-              { name: "Tapashi Rabeya Hall", capacity: "500", facilities: ["Wi-Fi", "Common Room", "Study Area", "Cafetaria"], icon: <Bed className="w-5 h-5" /> },
-              { name: "Bir Protik Taramon Bibi Hall", capacity: "1000", facilities: ["Wi-Fi", "Common Room", "Study Area", "Cafetaria"], icon: <GraduationCap className="w-5 h-5" /> }
-            ].map((hall, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#19aaba] cursor-pointer group"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-gradient-to-br from-[#19aaba] to-[#158c99] text-white p-3 rounded-xl">
-                    {hall.icon}
-                  </div>
-                  <div>
+          {/* Male Halls */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Male Halls</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                { name: "Shahid Moushiur Rahman Hall", image: "" },
+                { name: "Munshi Meherullah Hall", image: "" }
+              ].map((hall, index) => (
+                <div 
+                  key={index}
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#19aaba] cursor-pointer group"
+                >
+                  <div className="text-center">
+                    <img src={hall.image} alt={hall.name} className="w-full h-48 object-cover rounded-xl mb-4" />
                     <h3 className="text-xl font-bold text-gray-900">{hall.name}</h3>
-                    <p className="text-xs text-gray-500 font-medium">Capacity: {hall.capacity} students</p>
                   </div>
                 </div>
-                <ul className="space-y-2 mb-4">
-                  {hall.facilities.map((facility, facIndex) => (
-                    <li key={facIndex} className="flex items-start gap-2 text-gray-700 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span>{facility}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-center justify-center gap-2 text-[#19aaba] font-semibold text-sm pt-3 border-t border-gray-100 group-hover:gap-3 transition-all">
-                  <FileText className="w-4 h-4" />
-                  <span>View Details</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Female Halls */}
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Female Halls</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                { name: "Tapashi Rabeya Hall", image: "" },
+                { name: "Bir Protik Taramon Bibi Hall", image: "" }
+              ].map((hall, index) => (
+                <div 
+                  key={index}
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#19aaba] cursor-pointer group"
+                >
+                  <div className="text-center">
+                    <img src={hall.image} alt={hall.name} className="w-full h-48 object-cover rounded-xl mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900">{hall.name}</h3>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -354,13 +362,13 @@ const HomePage = () => {
             Our dedicated team is here to help you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/contact"
+            <a
+              href="mailto:hall@just.edu.bd"
               className="group bg-white text-[#19aaba] px-10 py-4 rounded-full font-bold shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
             >
               Contact Us
-              <Phone className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+              <Mail className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </a>
             <Link
               to="/rules"
               className="group border-2 border-white text-white px-10 py-4 rounded-full font-bold hover:bg-white hover:text-[#19aaba] transition-all duration-300 flex items-center justify-center gap-2"
@@ -370,7 +378,7 @@ const HomePage = () => {
             </Link>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact Info
           <div className="mt-12 pt-8 border-t border-white/20">
             <p className="text-gray-200 mb-4">Hall Management Office</p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -384,7 +392,7 @@ const HomePage = () => {
                 <p className="font-semibold">Location: JUST Campus, Jashore</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
     </div>

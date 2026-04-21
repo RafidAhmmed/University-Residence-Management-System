@@ -28,7 +28,7 @@ const AdminPublishNoticePage = () => {
   const fetchPreviousNotices = async () => {
     setNoticesLoading(true);
     try {
-      const response = await noticeAPI.getMyNotices();
+      const response = await noticeAPI.getAllPublishedNotices();
       setPreviousNotices(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error loading previous notices:', error);

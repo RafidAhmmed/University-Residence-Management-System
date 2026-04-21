@@ -16,6 +16,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminComplaintsPage from './pages/Admin/AdminComplaintsPage';
 import AdminPublishNoticePage from './pages/Admin/AdminPublishNoticePage';
 import AdminManageUsersPage from './pages/Admin/AdminManageUsersPage';
+import AdminProfilePage from './pages/Admin/AdminProfilePage';
 import UserProfile from './pages/User/UserProfile';
 import ComplaintPage from './pages/User/ComplaintPage';
 import NoticePage from './pages/User/NoticePage';
@@ -61,6 +62,7 @@ function App() {
             <Route path="complaints" element={<AdminComplaintsPage />} />
             <Route path="publish-notice" element={<AdminPublishNoticePage />} />
             <Route path="manage-users" element={<AdminManageUsersPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
 
           {/* User Routes (Protected) */}

@@ -23,7 +23,7 @@ class UserService {
   }
 
   async updateUser(id, updateData) {
-    return await User.findByIdAndUpdate(id, updateData, { new: true });
+    return await User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
   }
 
   async deleteUser(id) {

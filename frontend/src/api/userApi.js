@@ -3,6 +3,8 @@ import api from './api';
 export const userAPI = {
   getAllUsers: () => api.get('/users'),
   getUser: (id) => api.get(`/users/${id}`),
+  updateUser: (id, data) => api.put(`/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/users/${id}`),
   updateUserProfile: (id, profileData, profilePictureFile = null) => {
     const formData = new FormData();
 

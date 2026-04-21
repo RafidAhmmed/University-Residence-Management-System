@@ -5,7 +5,8 @@ import {
   Loader,
   ArrowRight,
   MessageSquare,
-  Bell
+  Bell,
+  UserCog
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -177,7 +178,15 @@ const AdminDashboard = () => {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ActionCard
+              icon={UserCog}
+              title="Manage Users"
+              description="Edit user data, update roles, apply filters, and export user lists."
+              color="#19aaba"
+              onClick={() => navigate('/admin/manage-users')}
+              badge={`${stats.totalUsers} total users`}
+            />
             <ActionCard
               icon={MessageSquare}
               title="Manage Complaints"

@@ -144,19 +144,17 @@ const AdminPublishNoticePage = () => {
 
     setLoading(true);
     try {
-      const noticeData = new FormData();
-      noticeData.append('title', formData.title);
-      noticeData.append('content', formData.content);
-      noticeData.append('type', formData.type);
-      noticeData.append('priority', formData.priority);
+      const noticeData = {
+        title: formData.title,
+        content: formData.content,
+        type: formData.type,
+        priority: formData.priority,
+      };
       if (formData.googleFormUrl.trim()) {
-        noticeData.append('googleFormUrl', formData.googleFormUrl.trim());
-      }
-      if (pdfFile) {
-        noticeData.append('pdfFile', pdfFile);
+        noticeData.googleFormUrl = formData.googleFormUrl.trim();
       }
 
-      const response = await noticeAPI.createNotice(noticeData);
+      const response = await noticeAPI.createNotice(noticeData, pdfFile);
 
       toast.success('Notice published successfully');
       const publishedNotice = response?.data?.notice;

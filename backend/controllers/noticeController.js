@@ -1,22 +1,8 @@
 const Notice = require('../models/Notice');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
 
-const noticeUploadDir = path.join(__dirname, '../uploads/notices');
-if (!fs.existsSync(noticeUploadDir)) {
-  fs.mkdirSync(noticeUploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, noticeUploadDir);
-  },
-  filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/\s+/g, '-');
-    cb(null, `${Date.now()}-${safeName}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -35,12 +21,45 @@ const upload = multer({
 class NoticeController {
   static uploadNoticePdf = upload.single('pdfFile');
 
+  static async uploadPdfToCloudinary(file, ownerId) {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'notice-pdfs',
+          public_id: `notice_${ownerId}_${Date.now()}`,
+          resource_type: 'raw',
+          format: 'pdf',
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          resolve(result);
+        }
+      );
+
+      stream.end(file.buffer);
+    });
+  }
+
   // Create a new notice (admin only)
   async createNotice(req, res) {
     try {
       const { title, content, type, priority, googleFormUrl } = req.body;
       const publishedBy = req.user.id; // From auth middleware
-      const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+      let pdfUrl = null;
+
+      if (req.file) {
+        try {
+          const uploadResult = await NoticeController.uploadPdfToCloudinary(req.file, publishedBy);
+          pdfUrl = uploadResult.secure_url;
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          return res.status(500).json({ error: 'Failed to upload notice PDF' });
+        }
+      }
 
       const normalizedGoogleFormUrl = googleFormUrl?.trim() || null;
 
@@ -51,7 +70,7 @@ class NoticeController {
         priority,
         publishedBy,
         googleFormUrl: normalizedGoogleFormUrl,
-        pdfUrl: req.file ? `${baseUrl}/uploads/notices/${req.file.filename}` : null,
+        pdfUrl,
       });
 
       await notice.save();
@@ -115,7 +134,6 @@ class NoticeController {
     try {
       const { id } = req.params;
       const { title, content, type, priority, isPublished, googleFormUrl } = req.body;
-      const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
 
       const updateData = {};
 
@@ -130,7 +148,13 @@ class NoticeController {
       }
 
       if (req.file) {
-        updateData.pdfUrl = `${baseUrl}/uploads/notices/${req.file.filename}`;
+        try {
+          const uploadResult = await NoticeController.uploadPdfToCloudinary(req.file, req.user.id);
+          updateData.pdfUrl = uploadResult.secure_url;
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          return res.status(500).json({ error: 'Failed to upload notice PDF' });
+        }
       }
 
       const notice = await Notice.findByIdAndUpdate(

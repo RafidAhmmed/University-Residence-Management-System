@@ -1,6 +1,7 @@
 import api from './api';
 
 export const userAPI = {
+  getAllUsers: () => api.get('/users'),
   getUser: (id) => api.get(`/users/${id}`),
   updateUserProfile: (id, profileData, profilePictureFile = null) => {
     const formData = new FormData();

@@ -14,11 +14,12 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "sonner";
+import { authAPI } from "../../api/authApi";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register, isAuthenticated, isAdmin } = useAuth();
+  const { login, isAuthenticated, isAdmin } = useAuth();
 
   const [isRegister, setIsRegister] = useState(false);
   const [formData, setFormData] = useState({
@@ -153,21 +154,13 @@ const Login = () => {
           allocatedHall: formData.allocatedHall || "Pending Allocation",
         };
 
-        await register(registerData);
-        toast.success("Registration successful! Please login.");
-        setIsRegister(false);
-        setFormData({
-          studentId: formData.studentId,
-          password: "",
-          name: "",
-          email: "",
-          phone: "",
-          dateOfBirth: "",
-          session: "",
-          department: "",
-          bloodGroup: "",
-          homeTown: "",
-          allocatedHall: "Pending Allocation",
+        await authAPI.requestRegisterOtp(registerData);
+        toast.success("OTP sent to your email. Verify to complete registration.");
+        navigate("/verify-otp", {
+          state: {
+            purpose: "register",
+            email: registerData.email,
+          },
         });
       } else {
         const response = await login(formData);

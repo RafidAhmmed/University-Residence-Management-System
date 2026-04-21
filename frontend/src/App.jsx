@@ -9,6 +9,9 @@ import { AdminRoute, UserRoute } from './components/ProtectedRoutes/ProtectedRou
 import ScrollTop from './components/ScrollTop/ScrollTop';
 import HomePage from './pages/Public/HomePage';
 import Login from './pages/Auth/Login';
+import ResetPassword from './pages/Auth/ResetPassword';
+import VerifyOTP from './pages/Auth/VerifyOTP';
+import ChangePassword from './pages/Auth/ChangePassword';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminComplaintsPage from './pages/Admin/AdminComplaintsPage';
 import AdminPublishNoticePage from './pages/Admin/AdminPublishNoticePage';
@@ -46,6 +49,9 @@ function App() {
 
           {/* Auth Routes (without layout) */}
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ResetPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/change-password" element={<ChangePassword />} />
 
 
           {/* Admin Routes (Protected) */}

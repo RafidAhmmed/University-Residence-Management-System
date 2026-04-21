@@ -9,7 +9,8 @@ import {
   X,
   UserCog,
   MessageSquare,
-  Bell
+  Bell,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
@@ -38,24 +39,44 @@ const AdminLayout = () => {
       exact: true
     },
     {
-      path: '/admin/complaints',
-      icon: MessageSquare,
-      label: 'Manage Complaints'
+      header: 'Management',
+      items: [
+        {
+          path: '/admin/complaints',
+          icon: MessageSquare,
+          label: 'Manage Complaints'
+        },
+        {
+          path: '/admin/publish-notice',
+          icon: Bell,
+          label: 'Publish Notice'
+        },
+        {
+          path: '/admin/manage-users',
+          icon: UserCog,
+          label: 'Manage Users'
+        },
+      ]
     },
     {
-      path: '/admin/publish-notice',
-      icon: Bell,
-      label: 'Publish Notice'
+      header: 'Fees & Payments',
+      items: [
+        {
+          path: '/admin/fees',
+          icon: CreditCard,
+          label: 'Manage Fees'
+        },
+      ]
     },
     {
-      path: '/admin/manage-users',
-      icon: UserCog,
-      label: 'Manage Users'
-    },
-    {
-      path: '/admin/profile',
-      icon: User,
-      label: 'My Profile'
+      header: 'Account',
+      items: [
+        {
+          path: '/admin/profile',
+          icon: User,
+          label: 'My Profile'
+        }
+      ]
     }
   ];
 
@@ -98,24 +119,54 @@ const AdminLayout = () => {
 
         {/* Navigation Menu */}
         <nav className="p-4 space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path, item.exact);
-            
+          {menuItems.map((section) => {
+            if (section.path) {
+              const Icon = section.icon;
+              const active = isActive(section.path, section.exact);
+
+              return (
+                <Link
+                  key={section.path}
+                  to={section.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    active
+                      ? 'bg-white text-[#19aaba] shadow-lg font-semibold'
+                      : 'hover:bg-white/10 text-white'
+                  }`}
+                >
+                  <Icon size={20} className="flex-shrink-0" />
+                  <span>{section.label}</span>
+                </Link>
+              );
+            }
+
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  active
-                    ? 'bg-white text-[#19aaba] shadow-lg font-semibold'
-                    : 'hover:bg-white/10 text-white'
-                }`}
-              >
-                <Icon size={20} className="flex-shrink-0" />
-                <span>{item.label}</span>
-              </Link>
+              <div key={section.header} className="space-y-2">
+                <p className="px-4 pt-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100/80">
+                  {section.header}
+                </p>
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path, item.exact);
+
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                        active
+                          ? 'bg-white text-[#19aaba] shadow-lg font-semibold'
+                          : 'hover:bg-white/10 text-white'
+                      }`}
+                    >
+                      <Icon size={20} className="flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
@@ -161,6 +212,7 @@ const AdminLayout = () => {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-800">
                   {location.pathname === '/admin' && 'Dashboard'}
                   {location.pathname === '/admin/manage-users' && 'Manage Users'}
+                  {location.pathname === '/admin/fees' && 'Manage Fees'}
                   {location.pathname === '/admin/profile' && 'My Profile'}
                 </h2>
               </div>

@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -44,6 +44,7 @@ app.use('/api/auth', require('./routers/authRouter'));
 app.use('/api/users', require('./routers/userRouter'));
 app.use('/api/complaints', require('./routers/complaintRouter'));
 app.use('/api/notices', require('./routers/noticeRouter'));
+app.use('/api/fees', require('./routers/feeRouter'));
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { User, Mail, Shield, Calendar, Edit, Camera, Phone, MapPin, Home, GraduationCap, Building, Droplet } from 'lucide-react';
+import { User, Mail, Shield, Calendar, Edit, Camera, Phone, MapPin, Home, GraduationCap, Building, Droplet, AlertTriangle, CreditCard, Clock, Loader } from 'lucide-react';
 import { toast } from 'sonner';
 import { userAPI } from '../../api/userApi';
 import { authAPI } from '../../api/authApi';
+import { feeAPI } from '../../api/feeApi';
 
 const UserProfile = () => {
   const { user, updateUser, fetchUserProfile } = useAuth();
@@ -27,6 +28,11 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [fixedOptions, setFixedOptions] = useState({ sessions: [], departments: [], halls: [] });
+  const [fees, setFees] = useState([]);
+  const [feesLoading, setFeesLoading] = useState(false);
+  const [selectedFee, setSelectedFee] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('bkash');
+  const [paying, setPaying] = useState(false);
 
   // Check if profile is locked (not first-time setup)
   const isProfileLocked = user && (
@@ -92,6 +98,26 @@ const UserProfile = () => {
     loadFixedOptions();
   }, []);
 
+  useEffect(() => {
+    const loadFees = async () => {
+      if (!user?.id) {
+        return;
+      }
+
+      setFeesLoading(true);
+      try {
+        const response = await feeAPI.getMyFees();
+        setFees(Array.isArray(response.data?.fees) ? response.data.fees : []);
+      } catch (error) {
+        console.error('Failed to load user fees:', error);
+      } finally {
+        setFeesLoading(false);
+      }
+    };
+
+    loadFees();
+  }, [user?.id]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -120,6 +146,36 @@ const UserProfile = () => {
 
   const handleProfilePictureClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const unpaidFees = fees.filter((fee) => fee.status !== 'paid');
+  const nearestFee = unpaidFees
+    .slice()
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0] || null;
+
+  const handleOpenPayment = (fee) => {
+    setSelectedFee(fee);
+    setPaymentMethod('bkash');
+  };
+
+  const handlePayFee = async (e) => {
+    e?.preventDefault();
+    if (!selectedFee) return;
+
+    setPaying(true);
+    try {
+      const transactionId = `${paymentMethod.toUpperCase()}-${Date.now()}`;
+      await feeAPI.payFee(selectedFee._id, { paymentMethod, transactionId });
+      toast.success('Payment completed successfully');
+      setSelectedFee(null);
+      const response = await feeAPI.getMyFees();
+      setFees(Array.isArray(response.data?.fees) ? response.data.fees : []);
+    } catch (error) {
+      console.error('Fee payment failed:', error);
+      toast.error(error.response?.data?.error || 'Failed to process payment');
+    } finally {
+      setPaying(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -179,6 +235,31 @@ const UserProfile = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {nearestFee && (
+          <div className={`mb-6 rounded-xl border p-4 shadow-sm ${nearestFee.isOverdue ? 'border-red-200 bg-red-50 text-red-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">{nearestFee.isOverdue ? 'Payment overdue' : 'Upcoming payment due'}</p>
+                  <p className="text-sm">
+                    {nearestFee.title} is due on {new Date(nearestFee.dueDate).toLocaleDateString()}.
+                    {nearestFee.isOverdue ? ` Late fee applies: ৳${nearestFee.lateFee || 0}.` : ` Amount due: ৳${nearestFee.amountDue}.`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenPayment(nearestFee)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#19aaba] px-4 py-2 text-sm font-medium text-white hover:bg-[#158c99]"
+              >
+                <CreditCard className="h-4 w-4" />
+                Pay now
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#19aaba] to-[#158c99] px-6 py-8">
@@ -546,7 +627,151 @@ const UserProfile = () => {
             )}
           </div>
         </div>
+
+        <div className="mt-8 rounded-lg bg-white p-6 shadow-lg">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">My Fees</h2>
+              <p className="text-sm text-gray-600">View your dues and pay with bKash, Nagad, or SSLCommerz mock checkout.</p>
+            </div>
+            <div className="rounded-full bg-[#19aaba]/10 px-3 py-1 text-sm font-medium text-[#19aaba]">
+              {fees.length} fee{fees.length === 1 ? '' : 's'} assigned
+            </div>
+          </div>
+
+          {feesLoading ? (
+            <div className="flex items-center gap-3 text-gray-600">
+              <Loader className="h-4 w-4 animate-spin text-[#19aaba]" />
+              Loading fees...
+            </div>
+          ) : fees.length ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {fees.map((fee) => {
+                const statusLabel = fee.status === 'paid' ? 'Paid' : fee.isOverdue ? 'Overdue' : 'Unpaid';
+                const statusClass = fee.status === 'paid'
+                  ? 'bg-green-100 text-green-700'
+                  : fee.isOverdue
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700';
+
+                return (
+                  <div key={fee._id} className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold text-gray-900">{fee.title}</p>
+                        <p className="text-sm text-gray-600 capitalize">{fee.feeType}</p>
+                      </div>
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusClass}`}>{statusLabel}</span>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 text-sm text-gray-700">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-500">Due date</span>
+                        <span>{new Date(fee.dueDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-500">Base amount</span>
+                        <span>৳{fee.amount}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-500">Late fee</span>
+                        <span>৳{fee.lateFee || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between font-semibold">
+                        <span className="text-gray-500">Amount due</span>
+                        <span>৳{fee.amountDue}</span>
+                      </div>
+                    </div>
+
+                    {fee.status !== 'paid' && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPayment(fee)}
+                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#19aaba] px-4 py-2 text-sm font-medium text-white hover:bg-[#158c99]"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Pay with online gateway
+                      </button>
+                    )}
+
+                    {fee.status === 'paid' && fee.paidAt && (
+                      <p className="mt-3 text-xs text-gray-500">
+                        Paid on {new Date(fee.paidAt).toLocaleDateString()} via {fee.paymentMethod?.toUpperCase() || 'online'}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center text-gray-600">
+              No fee assignments yet.
+            </div>
+          )}
+        </div>
       </div>
+
+      {selectedFee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => !paying && setSelectedFee(null)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Mock Payment Gateway</h3>
+                <p className="text-sm text-gray-600">Choose a gateway and complete the simulated payment.</p>
+              </div>
+              <button type="button" onClick={() => setSelectedFee(null)} className="text-gray-500 hover:text-gray-800">×</button>
+            </div>
+
+            <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
+              <p className="font-semibold text-gray-900">{selectedFee.title}</p>
+              <p>Due date: {new Date(selectedFee.dueDate).toLocaleDateString()}</p>
+              <p>Amount due: ৳{selectedFee.amountDue}</p>
+            </div>
+
+            <form onSubmit={handlePayFee} className="mt-4 space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Payment Method</label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {['bkash', 'nagad', 'sslcommerz'].map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setPaymentMethod(method)}
+                      className={`rounded-xl border px-4 py-3 text-sm font-medium capitalize transition-all ${paymentMethod === method ? 'border-[#19aaba] bg-[#19aaba]/5 text-[#19aaba]' : 'border-gray-200 text-gray-700 hover:border-gray-300'}`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                This is a mock gateway. Payment will be marked successful instantly.
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={paying}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#19aaba] px-4 py-3 font-medium text-white hover:bg-[#158c99] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {paying ? <Loader className="h-4 w-4 animate-spin" /> : null}
+                  {paying ? 'Processing...' : `Pay with ${paymentMethod}`}
+                </button>
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={() => setSelectedFee(null)}
+                  className="rounded-lg border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Image Modal */}
       {showImageModal && (

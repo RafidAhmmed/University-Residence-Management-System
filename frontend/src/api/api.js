@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const url = import.meta.env.VITE_API_URL || '/api';
+const envUrl = import.meta.env.VITE_API_URL?.trim();
+const isLocalBackendUrl = envUrl && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/?$/i.test(envUrl);
+const url = import.meta.env.DEV && isLocalBackendUrl ? '/api' : (envUrl || '/api');
 // Create axios instance
 const api = axios.create({
   baseURL: url,

@@ -6,7 +6,8 @@ import {
   ArrowRight,
   MessageSquare,
   Bell,
-  UserCog
+  UserCog,
+  CreditCard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -202,6 +203,14 @@ const AdminDashboard = () => {
               color="#8b5cf6"
               onClick={() => navigate('/admin/publish-notice')}
               badge={`${stats.totalNotices} total published notices`}
+            />
+            <ActionCard
+              icon={CreditCard}
+              title="Manage Fees"
+              description="Assign multi-part fees to filtered users and simulate online payments."
+              color="#19aaba"
+              onClick={() => navigate('/admin/fees')}
+              badge="bKash, Nagad, SSLCommerz mock gateway"
             />
           </div>
         </div>

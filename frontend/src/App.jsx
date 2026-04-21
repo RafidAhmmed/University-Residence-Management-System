@@ -15,6 +15,7 @@ import ChangePassword from './pages/Auth/ChangePassword';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminComplaintsPage from './pages/Admin/AdminComplaintsPage';
 import AdminPublishNoticePage from './pages/Admin/AdminPublishNoticePage';
+import AdminFeesPage from './pages/Admin/AdminFeesPage';
 import AdminManageUsersPage from './pages/Admin/AdminManageUsersPage';
 import AdminProfilePage from './pages/Admin/AdminProfilePage';
 import UserProfile from './pages/User/UserProfile';
@@ -61,6 +62,7 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="complaints" element={<AdminComplaintsPage />} />
             <Route path="publish-notice" element={<AdminPublishNoticePage />} />
+            <Route path="fees" element={<AdminFeesPage />} />
             <Route path="manage-users" element={<AdminManageUsersPage />} />
             <Route path="profile" element={<AdminProfilePage />} />
           </Route>

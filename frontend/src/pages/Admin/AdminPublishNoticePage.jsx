@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Bell, AlertCircle, CheckCircle, Calendar, Send, Save, FileText, Link as LinkIcon } from 'lucide-react';
+import { Bell, AlertCircle, CheckCircle, Calendar, Send, Save, FileText, Link as LinkIcon, ExternalLink, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { noticeAPI } from '../../api/noticeApi';
 
@@ -17,6 +17,27 @@ const AdminPublishNoticePage = () => {
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('publish');
+  const [previousNotices, setPreviousNotices] = useState([]);
+  const [noticesLoading, setNoticesLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPreviousNotices();
+  }, []);
+
+  const fetchPreviousNotices = async () => {
+    setNoticesLoading(true);
+    try {
+      const response = await noticeAPI.getMyNotices();
+      setPreviousNotices(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error loading previous notices:', error);
+      setPreviousNotices([]);
+      toast.error('Failed to load previous notices');
+    } finally {
+      setNoticesLoading(false);
+    }
+  };
 
   const noticeTypes = [
     { value: 'maintenance', label: 'Maintenance Notice', icon: <AlertCircle className="w-4 h-4" />, color: 'text-orange-600' },
@@ -135,9 +156,16 @@ const AdminPublishNoticePage = () => {
         noticeData.append('pdfFile', pdfFile);
       }
 
-      await noticeAPI.createNotice(noticeData);
+      const response = await noticeAPI.createNotice(noticeData);
 
       toast.success('Notice published successfully');
+      const publishedNotice = response?.data?.notice;
+      if (publishedNotice) {
+        setPreviousNotices(prev => [publishedNotice, ...prev]);
+      } else {
+        fetchPreviousNotices();
+      }
+
       // Reset form
       setFormData({
         title: '',
@@ -181,12 +209,38 @@ const AdminPublishNoticePage = () => {
               <Bell className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Publish Notice</h1>
-              <p className="text-gray-600">Create and publish notices for hall residents</p>
+              <h1 className="text-2xl font-bold text-gray-900">Notice Management</h1>
+              <p className="text-gray-600">Publish new notices and review previously published ones</p>
             </div>
+          </div>
+
+          <div className="inline-flex rounded-lg bg-gray-100 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('publish')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'publish'
+                  ? 'bg-white text-[#19aaba] shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Publish Notice
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-white text-[#19aaba] shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Previous Notices
+            </button>
           </div>
         </div>
 
+        {activeTab === 'publish' && (
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Form */}
           <div className="lg:col-span-2">
@@ -438,6 +492,81 @@ const AdminPublishNoticePage = () => {
             </div>
           </div>
         </div>
+        )}
+
+        {activeTab === 'history' && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Previous Notices</h2>
+            <button
+              type="button"
+              onClick={fetchPreviousNotices}
+              className="text-sm text-[#19aaba] hover:text-[#158c99]"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {noticesLoading && (
+            <div className="text-sm text-gray-600 py-4">Loading previous notices...</div>
+          )}
+
+          {!noticesLoading && previousNotices.length === 0 && (
+            <div className="text-sm text-gray-600 py-4">No notices published yet.</div>
+          )}
+
+          {!noticesLoading && previousNotices.length > 0 && (
+            <div className="space-y-3">
+              {previousNotices.slice(0, 8).map((notice) => (
+                <div key={notice._id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{notice.title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{notice.content}</p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(notice.priority || 'medium')}`}>
+                      {(notice.priority || 'medium').toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {new Date(notice.publishedAt || notice.createdAt).toLocaleString()}
+                    </span>
+                    <span className="capitalize">Type: {notice.type || 'general'}</span>
+                  </div>
+
+                  {(notice.pdfUrl || notice.googleFormUrl) && (
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      {notice.pdfUrl && (
+                        <a
+                          href={notice.pdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> PDF
+                        </a>
+                      )}
+                      {notice.googleFormUrl && (
+                        <a
+                          href={notice.googleFormUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" /> Form
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        )}
       </div>
     </div>
   );

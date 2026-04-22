@@ -115,12 +115,12 @@ const HomePage = () => {
           <div className="grid md:grid-cols-2 gap-4 items-center">
             {/* Left Content */}
             <div className="text-center md:text-left space-y-6">
-              <div className="inline-block">
+              {/* <div className="inline-block">
                 <span className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold border border-white/30">
                   Hall Management System | JUST
                 </span>
               </div>
-              
+               */}
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 Welcome to
                 <span className="block bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">

@@ -265,7 +265,7 @@ const HomePage = () => {
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Male Halls</h3>
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { name: "Shahid Moushiur Rahman Hall", image: "" },
+                { name: "Shahid Moushiur Rahman Hall", image: "/SMRH.png" },
                 { name: "Munshi Meherullah Hall", image: "" }
               ].map((hall, index) => (
                 <div 

@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Bell, AlertCircle, CheckCircle, Calendar, Send, Save, FileText, Link as LinkIcon, ExternalLink, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { noticeAPI } from '../../api/noticeApi';
+import { authAPI } from '../../api/authApi';
 
 const AdminPublishNoticePage = () => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ const AdminPublishNoticePage = () => {
     content: '',
     type: 'general',
     priority: 'medium',
+    hall: '',
     isPublished: false,
     googleFormUrl: '',
   });
@@ -20,10 +22,22 @@ const AdminPublishNoticePage = () => {
   const [activeTab, setActiveTab] = useState('publish');
   const [previousNotices, setPreviousNotices] = useState([]);
   const [noticesLoading, setNoticesLoading] = useState(true);
+  const [hallOptions, setHallOptions] = useState([]);
 
   useEffect(() => {
     fetchPreviousNotices();
+    fetchHallOptions();
   }, []);
+
+  const fetchHallOptions = async () => {
+    try {
+      const response = await authAPI.getRegisterOptions();
+      setHallOptions(response.data?.halls || []);
+    } catch (error) {
+      console.error('Error loading halls:', error);
+      setHallOptions([]);
+    }
+  };
 
   const fetchPreviousNotices = async () => {
     setNoticesLoading(true);
@@ -106,6 +120,11 @@ const AdminPublishNoticePage = () => {
       return false;
     }
 
+    if (formData.hall && !hallOptions.some((hall) => hall.name === formData.hall)) {
+      toast.error('Please select a valid hall');
+      return false;
+    }
+
     if (formData.googleFormUrl.trim()) {
       try {
         const parsed = new URL(formData.googleFormUrl.trim());
@@ -149,6 +168,7 @@ const AdminPublishNoticePage = () => {
         content: formData.content,
         type: formData.type,
         priority: formData.priority,
+        hall: formData.hall || null,
       };
       if (formData.googleFormUrl.trim()) {
         noticeData.googleFormUrl = formData.googleFormUrl.trim();
@@ -170,6 +190,7 @@ const AdminPublishNoticePage = () => {
         content: '',
         type: 'general',
         priority: 'medium',
+        hall: '',
         isPublished: false,
         googleFormUrl: '',
       });
@@ -309,6 +330,25 @@ const AdminPublishNoticePage = () => {
                   </div>
                 </div>
 
+                {/* Hall Targeting */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hall Target (optional)
+                  </label>
+                  <select
+                    name="hall"
+                    value={formData.hall}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#19aaba] focus:border-transparent"
+                  >
+                    <option value="">All Halls</option>
+                    {hallOptions.map((hall) => (
+                      <option key={hall.name} value={hall.name}>{hall.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">Leave blank to publish to every hall.</p>
+                </div>
+
                 {/* Content */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -425,6 +465,12 @@ const AdminPublishNoticePage = () => {
                       </div>
                     </div>
 
+                    {formData.hall && (
+                      <div className="text-xs font-medium text-[#158c99] bg-[#19aaba]/10 px-3 py-1 rounded-full inline-flex">
+                        Hall: {formData.hall}
+                      </div>
+                    )}
+
                     <div className="text-sm text-gray-700 whitespace-pre-line">
                       {formData.content || 'Notice content will appear here...'}
                     </div>
@@ -458,6 +504,10 @@ const AdminPublishNoticePage = () => {
                       <div className="flex justify-between">
                         <span>Priority:</span>
                         <span className="capitalize">{formData.priority}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Hall:</span>
+                        <span>{formData.hall || 'All halls'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Status:</span>
@@ -533,6 +583,7 @@ const AdminPublishNoticePage = () => {
                       {new Date(notice.publishedAt || notice.createdAt).toLocaleString()}
                     </span>
                     <span className="capitalize">Type: {notice.type || 'general'}</span>
+                    <span>Hall: {notice.hall || 'All halls'}</span>
                   </div>
 
                   {(notice.pdfUrl || notice.googleFormUrl) && (

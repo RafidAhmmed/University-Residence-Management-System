@@ -29,6 +29,16 @@ const complaintSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  sourceHall: {
+    type: String,
+    default: null,
+    trim: true,
+  },
+  sourceRoom: {
+    type: String,
+    default: null,
+    trim: true,
+  },
   adminResponse: {
     type: String,
     default: '',

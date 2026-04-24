@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Bell, Calendar, User, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Bell, Calendar, User, AlertCircle, CheckCircle, Clock, Home } from 'lucide-react';
 import { noticeAPI } from '../../api/noticeApi';
 
 const NoticePage = () => {
@@ -8,12 +8,17 @@ const NoticePage = () => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNotice, setSelectedNotice] = useState(null);
+  const [hallView, setHallView] = useState('my');
+
+  const userHall = user?.allocatedHall || '';
 
   // Fetch notices from API
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await noticeAPI.getAllNotices();
+        const response = await noticeAPI.getAllNotices({
+          hall: hallView === 'my' ? userHall : undefined,
+        });
         setNotices(response.data.notices);
       } catch (error) {
         console.error('Error fetching notices:', error);
@@ -25,7 +30,7 @@ const NoticePage = () => {
     };
 
     fetchNotices();
-  }, []);
+  }, [hallView, userHall]);
 
   const getNoticeIcon = (type) => {
     switch (type) {
@@ -66,6 +71,26 @@ const NoticePage = () => {
     });
   };
 
+  const currentHallLabel = hallView === 'my' && userHall ? userHall : 'All halls';
+  const getNoticeHallLabel = (notice) => notice.hall || 'All halls';
+  const getHallBadgeClass = (hallName) => {
+    const value = String(hallName || 'all-halls').toLowerCase();
+    const palette = [
+      'bg-cyan-50 text-cyan-700 border-cyan-200',
+      'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'bg-amber-50 text-amber-800 border-amber-200',
+      'bg-violet-50 text-violet-700 border-violet-200',
+      'bg-rose-50 text-rose-700 border-rose-200',
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash * 31 + value.charCodeAt(i)) % palette.length;
+    }
+
+    return palette[hash];
+  };
+
   const markAsRead = (noticeId) => {
     setNotices(prev => prev.map(notice =>
       notice.id === noticeId ? { ...notice, isRead: true } : notice
@@ -97,7 +122,23 @@ const NoticePage = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Hall Notices</h1>
               <p className="text-gray-600">Stay updated with important notices and information</p>
+              <p className="text-sm text-gray-500 mt-1">Showing notices for: {currentHallLabel}</p>
             </div>
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">Notice scope</label>
+            <select
+              value={hallView}
+              onChange={(e) => setHallView(e.target.value)}
+              className="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#19aaba] focus:border-transparent"
+            >
+              <option value="my">My hall only</option>
+              <option value="all">All halls</option>
+            </select>
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${hallView === 'my' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+              {hallView === 'my' ? `Scoped to ${currentHallLabel}` : 'Scoped to every hall'}
+            </span>
           </div>
 
           {/* Stats */}
@@ -153,11 +194,22 @@ const NoticePage = () => {
                             <Clock className="w-4 h-4" />
                             {formatDate(notice.publishedAt)}
                           </div>
+                          <div className="flex items-center gap-1">
+                            <Home className="w-4 h-4" />
+                            {notice.hall || 'All halls'}
+                          </div>
                         </div>
                       </div>
                     </div>
                     <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(notice.priority)}`}>
                       {notice.priority.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getHallBadgeClass(notice.hall)}`}>
+                      <Home className="w-3.5 h-3.5" />
+                      {getNoticeHallLabel(notice)}
                     </span>
                   </div>
 
@@ -215,6 +267,10 @@ const NoticePage = () => {
                       <Clock className="w-4 h-4" />
                       <span>{formatDate(selectedNotice.publishedAt)}</span>
                     </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Home className="w-4 h-4" />
+                      <span>{selectedNotice.hall || 'All halls'}</span>
+                    </div>
                     <div className="flex items-center justify-center">
                       <span className={`px-4 py-2 text-sm font-medium rounded-full border ${getPriorityColor(selectedNotice.priority)}`}>
                         {selectedNotice.priority.toUpperCase()} PRIORITY
@@ -224,6 +280,10 @@ const NoticePage = () => {
 
                   <div className="border-t border-gray-200 pt-4">
                     <h3 className="font-semibold text-gray-900 mb-3">Details</h3>
+                    <div className={`mb-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getHallBadgeClass(selectedNotice.hall)}`}>
+                      <Home className="w-3.5 h-3.5" />
+                      {selectedNotice.hall || 'All halls'}
+                    </div>
                     <div className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
                       {selectedNotice.content}
                     </div>

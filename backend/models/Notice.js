@@ -24,6 +24,11 @@ const noticeSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  hall: {
+    type: String,
+    default: null,
+    trim: true,
+  },
   isPublished: {
     type: Boolean,
     default: true,

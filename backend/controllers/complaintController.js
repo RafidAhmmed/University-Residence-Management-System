@@ -1,4 +1,5 @@
 const Complaint = require('../models/Complaint');
+const User = require('../models/User');
 
 class ComplaintController {
   // Create a new complaint
@@ -6,6 +7,11 @@ class ComplaintController {
     try {
       const { title, description, category, priority } = req.body;
       const userId = req.user.id; // From auth middleware
+      const user = await User.findById(userId).select('allocatedHall allocatedRoom');
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
 
       const complaint = new Complaint({
         title,
@@ -13,10 +19,12 @@ class ComplaintController {
         category,
         priority,
         user: userId,
+        sourceHall: user.allocatedHall || null,
+        sourceRoom: user.allocatedRoom || null,
       });
 
       await complaint.save();
-      await complaint.populate('user', 'name studentId');
+      await complaint.populate('user', 'name studentId allocatedHall allocatedRoom');
 
       res.status(201).json({
         message: 'Complaint submitted successfully',
@@ -37,7 +45,7 @@ class ComplaintController {
       if (category) filter.category = category;
 
       const complaints = await Complaint.find(filter)
-        .populate('user', 'name studentId')
+        .populate('user', 'name studentId allocatedHall allocatedRoom')
         .sort({ createdAt: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit);
@@ -84,7 +92,7 @@ class ComplaintController {
         id,
         updateData,
         { new: true }
-      ).populate('user', 'name studentId');
+      ).populate('user', 'name studentId allocatedHall allocatedRoom');
 
       if (!complaint) {
         return res.status(404).json({ error: 'Complaint not found' });
@@ -104,7 +112,7 @@ class ComplaintController {
     try {
       const { id } = req.params;
       const complaint = await Complaint.findById(id)
-        .populate('user', 'name studentId');
+        .populate('user', 'name studentId allocatedHall allocatedRoom');
 
       if (!complaint) {
         return res.status(404).json({ error: 'Complaint not found' });

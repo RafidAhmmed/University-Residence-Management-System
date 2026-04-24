@@ -47,7 +47,7 @@ class NoticeController {
   // Create a new notice (admin only)
   async createNotice(req, res) {
     try {
-      const { title, content, type, priority, googleFormUrl } = req.body;
+      const { title, content, type, priority, googleFormUrl, hall } = req.body;
       const publishedBy = req.user.id; // From auth middleware
       let pdfUrl = null;
 
@@ -62,6 +62,7 @@ class NoticeController {
       }
 
       const normalizedGoogleFormUrl = googleFormUrl?.trim() || null;
+      const normalizedHall = hall?.trim() || null;
 
       const notice = new Notice({
         title,
@@ -69,6 +70,7 @@ class NoticeController {
         type,
         priority,
         publishedBy,
+        hall: normalizedHall,
         googleFormUrl: normalizedGoogleFormUrl,
         pdfUrl,
       });
@@ -88,10 +90,13 @@ class NoticeController {
   // Get all notices
   async getAllNotices(req, res) {
     try {
-      const { type, page = 1, limit = 10 } = req.query;
+      const { type, hall, page = 1, limit = 10 } = req.query;
 
       let filter = { isPublished: true };
       if (type) filter.type = type;
+      if (hall) {
+        filter.$or = [{ hall: null }, { hall: '' }, { hall }];
+      }
 
       const notices = await Notice.find(filter)
         .populate('publishedBy', 'name')
@@ -133,7 +138,7 @@ class NoticeController {
   async updateNotice(req, res) {
     try {
       const { id } = req.params;
-      const { title, content, type, priority, isPublished, googleFormUrl } = req.body;
+      const { title, content, type, priority, isPublished, googleFormUrl, hall } = req.body;
 
       const updateData = {};
 
@@ -145,6 +150,10 @@ class NoticeController {
 
       if (googleFormUrl !== undefined) {
         updateData.googleFormUrl = googleFormUrl.trim() || null;
+      }
+
+      if (hall !== undefined) {
+        updateData.hall = hall.trim() || null;
       }
 
       if (req.file) {
@@ -197,6 +206,7 @@ class NoticeController {
     try {
       const publishedBy = req.user.id;
       const notices = await Notice.find({ publishedBy })
+        .populate('publishedBy', 'name')
         .sort({ createdAt: -1 });
 
       res.json(notices);

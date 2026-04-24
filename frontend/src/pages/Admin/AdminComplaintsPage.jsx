@@ -106,8 +106,10 @@ const AdminComplaintsPage = () => {
     const matchesFilter = filter === 'all' || complaint.status === filter;
     const matchesSearch = searchTerm === '' ||
       complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      complaint.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      complaint.roomNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      complaint.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.user?.studentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.sourceHall?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.sourceRoom?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -260,6 +262,8 @@ const AdminComplaintsPage = () => {
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                           <span>{complaint.user?.name || 'Unknown'}</span>
                           <span>ID: {complaint.user?.studentId || 'N/A'}</span>
+                          <span>Hall: {complaint.sourceHall || complaint.user?.allocatedHall || 'N/A'}</span>
+                          <span>Room: {complaint.sourceRoom || complaint.user?.allocatedRoom || 'N/A'}</span>
                           <span>{formatDate(complaint.createdAt)}</span>
                         </div>
                       </div>
@@ -315,6 +319,14 @@ const AdminComplaintsPage = () => {
                       <div>
                         <span className="font-medium text-gray-700">Student ID:</span>
                         <p className="text-gray-600">{selectedComplaint.user?.studentId || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Hall:</span>
+                        <p className="text-gray-600">{selectedComplaint.sourceHall || selectedComplaint.user?.allocatedHall || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">Room:</span>
+                        <p className="text-gray-600">{selectedComplaint.sourceRoom || selectedComplaint.user?.allocatedRoom || 'N/A'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">Category:</span>

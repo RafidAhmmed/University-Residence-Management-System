@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed:directory": "node scripts/seedDirectoryOptions.js",
     "normalize:departments": "node scripts/normalizeDepartmentNames.js",
+    "migrate:complaint-priority:remove": "node scripts/removeComplaintPriority.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

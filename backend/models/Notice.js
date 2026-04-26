@@ -14,11 +14,6 @@ const noticeSchema = new mongoose.Schema({
     enum: ['maintenance', 'event', 'emergency', 'general'],
     required: true,
   },
-  priority: {
-    type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium',
-  },
   publishedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -26,7 +21,7 @@ const noticeSchema = new mongoose.Schema({
   },
   hall: {
     type: String,
-    default: null,
+    required: true,
     trim: true,
   },
   isPublished: {

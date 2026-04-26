@@ -14,11 +14,6 @@ const complaintSchema = new mongoose.Schema({
     enum: ['maintenance', 'cleaning', 'security', 'facilities', 'other'],
     required: true,
   },
-  priority: {
-    type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium',
-  },
   status: {
     type: String,
     enum: ['pending', 'in-progress', 'resolved', 'closed'],

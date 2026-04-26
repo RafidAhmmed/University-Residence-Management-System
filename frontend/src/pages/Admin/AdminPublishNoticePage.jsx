@@ -11,7 +11,6 @@ const AdminPublishNoticePage = () => {
     title: '',
     content: '',
     type: 'general',
-    priority: 'medium',
     hall: '',
     isPublished: false,
     googleFormUrl: '',
@@ -60,12 +59,6 @@ const AdminPublishNoticePage = () => {
     { value: 'general', label: 'General Notice', icon: <CheckCircle className="w-4 h-4" />, color: 'text-blue-600' },
   ];
 
-  const priorities = [
-    { value: 'low', label: 'Low Priority', color: 'bg-green-100 text-green-800' },
-    { value: 'medium', label: 'Medium Priority', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'high', label: 'High Priority', color: 'bg-red-100 text-red-800' },
-  ];
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -78,13 +71,6 @@ const AdminPublishNoticePage = () => {
     setFormData(prev => ({
       ...prev,
       type
-    }));
-  };
-
-  const handlePriorityChange = (priority) => {
-    setFormData(prev => ({
-      ...prev,
-      priority
     }));
   };
 
@@ -120,7 +106,12 @@ const AdminPublishNoticePage = () => {
       return false;
     }
 
-    if (formData.hall && !hallOptions.some((hall) => hall.name === formData.hall)) {
+    if (!formData.hall.trim()) {
+      toast.error('Please select a hall');
+      return false;
+    }
+
+    if (!hallOptions.some((hall) => hall.name === formData.hall)) {
       toast.error('Please select a valid hall');
       return false;
     }
@@ -167,8 +158,7 @@ const AdminPublishNoticePage = () => {
         title: formData.title,
         content: formData.content,
         type: formData.type,
-        priority: formData.priority,
-        hall: formData.hall || null,
+        hall: formData.hall,
       };
       if (formData.googleFormUrl.trim()) {
         noticeData.googleFormUrl = formData.googleFormUrl.trim();
@@ -189,7 +179,6 @@ const AdminPublishNoticePage = () => {
         title: '',
         content: '',
         type: 'general',
-        priority: 'medium',
         hall: '',
         isPublished: false,
         googleFormUrl: '',
@@ -211,11 +200,6 @@ const AdminPublishNoticePage = () => {
   const getTypeColor = (type) => {
     const noticeType = noticeTypes.find(t => t.value === type);
     return noticeType ? noticeType.color : 'text-gray-600';
-  };
-
-  const getPriorityColor = (priority) => {
-    const prio = priorities.find(p => p.value === priority);
-    return prio ? prio.color : 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -307,46 +291,24 @@ const AdminPublishNoticePage = () => {
                   </div>
                 </div>
 
-                {/* Priority */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Priority Level *
-                  </label>
-                  <div className="flex gap-3">
-                    {priorities.map((priority) => (
-                      <button
-                        key={priority.value}
-                        type="button"
-                        onClick={() => handlePriorityChange(priority.value)}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all ${
-                          formData.priority === priority.value
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        {priority.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Hall Targeting */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hall Target (optional)
+                    Hall Name *
                   </label>
                   <select
                     name="hall"
                     value={formData.hall}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required
                   >
-                    <option value="">All Halls</option>
+                    <option value="">Select Hall</option>
                     {hallOptions.map((hall) => (
                       <option key={hall.name} value={hall.name}>{hall.name}</option>
                     ))}
                   </select>
-                  <p className="text-sm text-gray-500 mt-1">Leave blank to publish to every hall.</p>
+                  <p className="text-sm text-gray-500 mt-1">Choose the hall that should receive this notice.</p>
                 </div>
 
                 {/* Content */}
@@ -458,9 +420,6 @@ const AdminPublishNoticePage = () => {
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-gray-500">Published by: {user?.name || 'Admin'}</span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(formData.priority)}`}>
-                            {formData.priority.toUpperCase()}
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -502,12 +461,8 @@ const AdminPublishNoticePage = () => {
                         <span className="capitalize">{formData.type}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Priority:</span>
-                        <span className="capitalize">{formData.priority}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span>Hall:</span>
-                        <span>{formData.hall || 'All halls'}</span>
+                        <span>{formData.hall || 'Not selected'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Status:</span>
@@ -523,7 +478,7 @@ const AdminPublishNoticePage = () => {
                       <li>• Use clear, concise titles</li>
                       <li>• Include specific dates and times</li>
                       <li>• Mention contact information</li>
-                      <li>• Set appropriate priority levels</li>
+                      <li>• Select the correct hall before publishing</li>
                     </ul>
                   </div>
                 </div>
@@ -572,9 +527,6 @@ const AdminPublishNoticePage = () => {
                       <h3 className="font-semibold text-gray-900">{notice.title}</h3>
                       <p className="text-sm text-gray-600 line-clamp-2 mt-1">{notice.content}</p>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(notice.priority || 'medium')}`}>
-                      {(notice.priority || 'medium').toUpperCase()}
-                    </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-500">
@@ -583,7 +535,7 @@ const AdminPublishNoticePage = () => {
                       {new Date(notice.publishedAt || notice.createdAt).toLocaleString()}
                     </span>
                     <span className="capitalize">Type: {notice.type || 'general'}</span>
-                    <span>Hall: {notice.hall || 'All halls'}</span>
+                    <span>Hall: {notice.hall || '-'}</span>
                   </div>
 
                   {(notice.pdfUrl || notice.googleFormUrl) && (

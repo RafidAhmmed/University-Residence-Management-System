@@ -47,7 +47,7 @@ class NoticeController {
   // Create a new notice (admin only)
   async createNotice(req, res) {
     try {
-      const { title, content, type, priority, googleFormUrl, hall } = req.body;
+      const { title, content, type, googleFormUrl, hall } = req.body;
       const publishedBy = req.user.id; // From auth middleware
       let pdfUrl = null;
 
@@ -62,13 +62,16 @@ class NoticeController {
       }
 
       const normalizedGoogleFormUrl = googleFormUrl?.trim() || null;
-      const normalizedHall = hall?.trim() || null;
+      const normalizedHall = hall?.trim();
+
+      if (!normalizedHall) {
+        return res.status(400).json({ error: 'Hall is required' });
+      }
 
       const notice = new Notice({
         title,
         content,
         type,
-        priority,
         publishedBy,
         hall: normalizedHall,
         googleFormUrl: normalizedGoogleFormUrl,
@@ -95,7 +98,7 @@ class NoticeController {
       let filter = { isPublished: true };
       if (type) filter.type = type;
       if (hall) {
-        filter.$or = [{ hall: null }, { hall: '' }, { hall }];
+        filter.hall = hall;
       }
 
       const notices = await Notice.find(filter)
@@ -138,14 +141,13 @@ class NoticeController {
   async updateNotice(req, res) {
     try {
       const { id } = req.params;
-      const { title, content, type, priority, isPublished, googleFormUrl, hall } = req.body;
+      const { title, content, type, isPublished, googleFormUrl, hall } = req.body;
 
       const updateData = {};
 
       if (title !== undefined) updateData.title = title;
       if (content !== undefined) updateData.content = content;
       if (type !== undefined) updateData.type = type;
-      if (priority !== undefined) updateData.priority = priority;
       if (isPublished !== undefined) updateData.isPublished = isPublished;
 
       if (googleFormUrl !== undefined) {
@@ -153,7 +155,11 @@ class NoticeController {
       }
 
       if (hall !== undefined) {
-        updateData.hall = hall.trim() || null;
+        const normalizedHall = hall.trim();
+        if (!normalizedHall) {
+          return res.status(400).json({ error: 'Hall is required' });
+        }
+        updateData.hall = normalizedHall;
       }
 
       if (req.file) {

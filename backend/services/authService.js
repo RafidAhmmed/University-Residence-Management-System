@@ -295,6 +295,34 @@ class AuthService {
     await AuthOtp.deleteMany({ email: normalizedEmail, purpose: 'reset' });
   }
 
+  async changePassword(userId, currentPassword, newPassword) {
+    if (!currentPassword) {
+      throw new Error('Current password is required');
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new Error('New password must be different from current password');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+  }
+
   async login(studentId, password) {
     const result = await userService.login(studentId, password);
     return result;

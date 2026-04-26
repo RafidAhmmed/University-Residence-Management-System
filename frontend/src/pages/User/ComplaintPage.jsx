@@ -11,7 +11,6 @@ const ComplaintPage = () => {
     title: '',
     description: '',
     category: '',
-    priority: 'medium',
   });
 
   const complaintCategories = [
@@ -20,13 +19,6 @@ const ComplaintPage = () => {
     { value: 'facilities', label: 'Facilities Problem', icon: <Home className="w-4 h-4" />, description: 'Common areas, Wi-Fi, water supply' },
     { value: 'security', label: 'Security Concern', icon: <AlertTriangle className="w-4 h-4" />, description: 'Safety and security issues' },
     { value: 'other', label: 'Other', icon: <MessageSquare className="w-4 h-4" />, description: 'Any other complaints' },
-  ];
-
-  const priorityLevels = [
-    { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800', description: 'Can wait a few days' },
-    { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800', description: 'Should be addressed soon' },
-    { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800', description: 'Needs immediate attention' },
-    { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800', description: 'Emergency situation' },
   ];
 
   // Fetch user complaints on component mount
@@ -69,7 +61,6 @@ const ComplaintPage = () => {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        priority: formData.priority,
       };
 
       await complaintAPI.createComplaint(complaintData);
@@ -81,7 +72,6 @@ const ComplaintPage = () => {
         title: '',
         description: '',
         category: '',
-        priority: 'medium',
       });
 
       // Refresh complaints list
@@ -119,7 +109,7 @@ const ComplaintPage = () => {
                 <h3 className="font-semibold text-blue-900 mb-1">Important Information</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• All complaints are reviewed within 24 hours</li>
-                  <li>• Urgent issues will be addressed immediately</li>
+                  <li>• Critical issues will be handled as quickly as possible</li>
                   <li>• You will receive updates on your complaint status</li>
                   <li>• False complaints may result in disciplinary action</li>
                 </ul>
@@ -187,40 +177,6 @@ const ComplaintPage = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 required
               />
-            </div>
-
-            {/* Priority Level */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Urgency Level <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {priorityLevels.map((level) => (
-                  <label
-                    key={level.value}
-                    className={`relative flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                      formData.priority === level.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="urgency"
-                      value={level.value}
-                      checked={formData.priority === level.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className="text-center">
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mb-1 ${level.color}`}>
-                        {level.label}
-                      </div>
-                      <div className="text-xs text-gray-500">{level.description}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Description */}

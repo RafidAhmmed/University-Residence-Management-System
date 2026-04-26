@@ -61,19 +61,6 @@ const AdminComplaintsPage = () => {
     }
   };
 
-  const getUrgencyColor = (urgency) => {
-    switch (urgency) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const getCategoryColor = (category) => {
     switch (category) {
       case 'maintenance':
@@ -249,7 +236,7 @@ const AdminComplaintsPage = () => {
               <div
                 key={complaint._id}
                 className={`bg-white rounded-lg shadow-sm border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  selectedComplaint?._id === complaint._id ? 'ring-2 ring-[#1d3557]' : 'border-gray-200'
+                  selectedComplaint?._id === complaint._id ? 'ring-2 ring-primary' : 'border-gray-200'
                 }`}
                 onClick={() => setSelectedComplaint(complaint)}
               >
@@ -271,9 +258,6 @@ const AdminComplaintsPage = () => {
                     <div className="flex flex-col gap-2">
                       <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(complaint.status)}`}>
                         {complaint.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${getUrgencyColor(complaint.priority)}`}>
-                        {complaint.priority.toUpperCase()}
                       </span>
                     </div>
                   </div>
@@ -332,12 +316,6 @@ const AdminComplaintsPage = () => {
                         <span className="font-medium text-gray-700">Category:</span>
                         <span className={`px-2 py-1 text-xs font-medium rounded ${getCategoryColor(selectedComplaint.category)}`}>
                           {selectedComplaint.category}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Priority:</span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded ${getUrgencyColor(selectedComplaint.priority)}`}>
-                          {selectedComplaint.priority}
                         </span>
                       </div>
                     </div>

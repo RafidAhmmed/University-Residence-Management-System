@@ -88,6 +88,16 @@ class AuthController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      await authService.changePassword(req.user.id, currentPassword, newPassword);
+      res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();

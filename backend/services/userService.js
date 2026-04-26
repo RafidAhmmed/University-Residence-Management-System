@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { normalizeStudentId } = require('../utils/studentAccount');
 
 class UserService {
   async createUser(userData) {
@@ -35,7 +36,8 @@ class UserService {
   }
 
   async login(studentId, password) {
-    const user = await this.getUserByStudentId(studentId);
+    const normalizedStudentId = normalizeStudentId(studentId);
+    const user = await this.getUserByStudentId(normalizedStudentId);
     if (!user) {
       throw new Error('User not found');
     }

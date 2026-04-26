@@ -34,6 +34,12 @@ const UserProfile = () => {
   const [selectedFee, setSelectedFee] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('bkash');
   const [paying, setPaying] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const formatGender = (value) => (value ? value.replace(/_/g, ' ') : 'Not provided');
 
@@ -226,6 +232,57 @@ const UserProfile = () => {
     }
   };
 
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handlePasswordChangeSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!passwordData.currentPassword) {
+      toast.error('Current password is required');
+      return;
+    }
+
+    if (!passwordData.newPassword) {
+      toast.error('New password is required');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New password and confirm password do not match');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await authAPI.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      toast.success('Password changed successfully');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error) {
+      console.error('Password change error:', error);
+      toast.error(error.response?.data?.error || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -244,7 +301,7 @@ const UserProfile = () => {
           <div className={`mb-6 rounded-xl border p-4 shadow-sm ${nearestFee.isOverdue ? 'border-red-200 bg-red-50 text-red-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <p className="font-semibold">{nearestFee.isOverdue ? 'Payment overdue' : 'Upcoming payment due'}</p>
                   <p className="text-sm">
@@ -267,7 +324,7 @@ const UserProfile = () => {
 
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary-light px-6 py-8">
+          <div className="bg-linear-to-r from-primary to-primary-light px-6 py-8">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
@@ -742,6 +799,63 @@ const UserProfile = () => {
             </div>
           )}
         </div>
+
+        <div className="mt-8 rounded-lg bg-white p-6 shadow-lg">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
+            <p className="text-sm text-gray-600">Update your account password for better security.</p>
+          </div>
+
+          <form onSubmit={handlePasswordChangeSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Current Password</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
+                placeholder="Enter current password"
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">New Password</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
+                placeholder="At least 6 characters"
+                minLength={6}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Confirm New Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
+                placeholder="Re-enter new password"
+                minLength={6}
+                required
+              />
+            </div>
+            <div className="md:col-span-3">
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 font-medium text-white hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {passwordLoading ? 'Updating Password...' : 'Update Password'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       {selectedFee && (
@@ -779,7 +893,7 @@ const UserProfile = () => {
               </div>
 
               <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <Clock className="h-4 w-4 flex-shrink-0" />
+                <Clock className="h-4 w-4 shrink-0" />
                 This is a mock gateway. Payment will be marked successful instantly.
               </div>
 

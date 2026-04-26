@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, Search, Filter, Bell, AlertTriangle, Info, CheckCircle, FileText, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, User, Search, Filter, Bell, AlertTriangle, FileText, ExternalLink, Home } from 'lucide-react';
 import { noticeAPI } from '../../api/noticeApi';
 
 const Notice = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedHall, setSelectedHall] = useState('all');
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +21,7 @@ const Notice = () => {
           title: notice.title,
           content: notice.content,
           category: notice.type,
-          priority: notice.priority,
+          hall: notice.hall || '',
           date: new Date(notice.publishedAt).toISOString().split('T')[0],
           time: new Date(notice.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           author: notice.publishedBy?.name || 'Unknown',
@@ -47,29 +48,21 @@ const Notice = () => {
     { value: 'general', label: 'General', color: 'bg-green-100 text-green-800' }
   ];
 
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'high': return <AlertTriangle size={15} className="text-danger" />;
-      case 'medium': return <Info size={15} className="text-yellow-500" />;
-      case 'low': return <CheckCircle size={15} className="text-green-500" />;
-      default: return <Info size={15} className="text-gray-400" />;
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'border-l-danger';
-      case 'medium': return 'border-l-yellow-500';
-      case 'low': return 'border-l-green-500';
-      default: return 'border-l-gray-300';
-    }
-  };
+  const hallOptions = [
+    'all',
+    'Shahid Moushiur Rahman Hall',
+    'Munshi Meherullah Hall',
+    'Tapashi Rabeya Hall',
+    'Bir Protik Taramon Bibi Hall',
+  ];
 
   const filteredNotices = notices.filter(notice => {
     const matchesSearch = notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notice.content.toLowerCase().includes(searchTerm.toLowerCase());
+                         notice.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         notice.hall.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || notice.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesHall = selectedHall === 'all' || notice.hall === selectedHall;
+    return matchesSearch && matchesCategory && matchesHall;
   });
 
   return (
@@ -130,6 +123,20 @@ const Notice = () => {
                     ))}
                   </select>
                 </div>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <Home size={18} className="text-gray-500" />
+                  <select
+                    value={selectedHall}
+                    onChange={(e) => setSelectedHall(e.target.value)}
+                    className="px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none text-sm"
+                  >
+                    {hallOptions.map((hallName) => (
+                      <option key={hallName} value={hallName}>
+                        {hallName === 'all' ? 'All Halls' : hallName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -138,12 +145,12 @@ const Notice = () => {
               {filteredNotices.map((notice) => (
                 <div
                   key={notice.id}
-                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 ${getPriorityColor(notice.priority)} overflow-hidden border border-gray-100 card-hover`}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-accent overflow-hidden border border-gray-100 card-hover"
                 >
                   <div className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        {getPriorityIcon(notice.priority)}
+                        <Bell size={15} className="text-primary" />
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           categories.find(c => c.value === notice.category)?.color || 'bg-gray-100 text-gray-700'
                         }`}>
@@ -159,6 +166,14 @@ const Notice = () => {
 
                     <h3 className="text-base font-bold text-primary mb-2 line-clamp-2 font-heading">{notice.title}</h3>
                     <p className="text-gray-600 text-sm mb-4 line-clamp-3">{notice.content}</p>
+
+                    {notice.hall && (
+                      <div className="mb-4">
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">
+                          <Home size={12} /> {notice.hall}
+                        </span>
+                      </div>
+                    )}
 
                     {(notice.pdfUrl || notice.googleFormUrl) && (
                       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -214,7 +229,7 @@ const Notice = () => {
               <div className="text-center py-12">
                 <Bell size={56} className="mx-auto text-gray-300 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-500 mb-2 font-heading">No notices found</h3>
-                <p className="text-gray-400 text-sm">Try adjusting your search or filter criteria</p>
+                <p className="text-gray-400 text-sm">Try adjusting your search, category, or hall filter criteria</p>
               </div>
             )}
           </>

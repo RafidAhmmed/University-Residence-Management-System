@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, ArrowLeft, Bell, AlertTriangle, Info, CheckCircle, FileText, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, User, ArrowLeft, Bell, AlertTriangle, FileText, ExternalLink } from 'lucide-react';
 import { noticeAPI } from '../../api/noticeApi';
 
 const NoticeDetail = () => {
@@ -24,24 +24,6 @@ const NoticeDetail = () => {
     };
     fetchNotice();
   }, [id]);
-
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'high': return <AlertTriangle size={18} className="text-danger" />;
-      case 'medium': return <Info size={18} className="text-yellow-500" />;
-      case 'low': return <CheckCircle size={18} className="text-green-500" />;
-      default: return <Info size={18} className="text-gray-400" />;
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'border-l-danger';
-      case 'medium': return 'border-l-yellow-500';
-      case 'low': return 'border-l-green-500';
-      default: return 'border-l-gray-300';
-    }
-  };
 
   const categories = [
     { value: 'maintenance', label: 'Maintenance', color: 'bg-yellow-100 text-yellow-800' },
@@ -119,11 +101,11 @@ const NoticeDetail = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className={`bg-white rounded-xl shadow-sm border-l-4 ${getPriorityColor(notice.priority)} border border-gray-100 overflow-hidden`}>
+        <div className="bg-white rounded-xl shadow-sm border-l-4 border-l-accent border border-gray-100 overflow-hidden">
           <div className="p-7 sm:p-8">
             <div className="flex items-start justify-between mb-5">
               <div className="flex items-center gap-3">
-                {getPriorityIcon(notice.priority)}
+                <Bell size={18} className="text-primary" />
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   categories.find(c => c.value === notice.type)?.color || 'bg-gray-100 text-gray-700'
                 }`}>

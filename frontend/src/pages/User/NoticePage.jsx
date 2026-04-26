@@ -47,19 +47,6 @@ const NoticePage = () => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -149,9 +136,9 @@ const NoticePage = () => {
             </div>
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <div className="text-2xl font-bold text-red-600">
-                {notices.filter(n => n.priority === 'high').length}
+                {notices.filter(n => n.type === 'emergency').length}
               </div>
-              <div className="text-sm text-red-800">High Priority</div>
+              <div className="text-sm text-red-800">Emergency</div>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               <div className="text-2xl font-bold text-yellow-600">
@@ -201,9 +188,6 @@ const NoticePage = () => {
                         </div>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(notice.priority)}`}>
-                      {notice.priority.toUpperCase()}
-                    </span>
                   </div>
 
                   <div className="mb-3 flex flex-wrap gap-2">
@@ -270,11 +254,6 @@ const NoticePage = () => {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Home className="w-4 h-4" />
                       <span>{selectedNotice.hall || 'All halls'}</span>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <span className={`px-4 py-2 text-sm font-medium rounded-full border ${getPriorityColor(selectedNotice.priority)}`}>
-                        {selectedNotice.priority.toUpperCase()} PRIORITY
-                      </span>
                     </div>
                   </div>
 

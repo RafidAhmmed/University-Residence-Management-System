@@ -29,11 +29,27 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    const status = error.response?.status;
+    const requestUrl = String(error.config?.url || '');
+    const publicAuthEndpoints = [
+      '/auth/login',
+      '/auth/register',
+      '/auth/register/request-otp',
+      '/auth/register/verify-otp',
+      '/auth/password/request-otp',
+      '/auth/password/verify-otp',
+      '/auth/password/reset',
+      '/auth/register/options',
+    ];
+    const isPublicAuthEndpoint = publicAuthEndpoints.some((endpoint) => requestUrl.includes(endpoint));
+
+    if (status === 401 && !isPublicAuthEndpoint) {
+      // Token expired/invalid for protected request: clear auth and send to login.
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

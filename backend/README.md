@@ -31,6 +31,7 @@ This is the backend API for the Hall Management system, built with Express.js an
    ```
    PORT=5000
    MONGODB_URI=mongodb://localhost:27017/hall_management
+   JWT_SECRET=your_long_random_secret
    ```
 
 3. Start MongoDB (if using local MongoDB)

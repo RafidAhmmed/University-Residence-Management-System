@@ -49,7 +49,7 @@ const Contact = () => {
     return (
       <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-5 border border-gray-100 card-hover">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="w-11 h-11 bg-primary rounded-lg flex items-center justify-center text-white">
               <Icon size={20} />
             </div>
@@ -203,7 +203,7 @@ const Contact = () => {
               </div>
               <div className="mt-5 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle size={16} className="text-yellow-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-medium text-yellow-800">Emergency Notice</p>
                     <p className="text-xs text-yellow-700">For emergencies outside office hours, contact the emergency hotline.</p>

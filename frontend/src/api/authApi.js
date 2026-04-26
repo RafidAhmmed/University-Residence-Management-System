@@ -9,5 +9,6 @@ export const authAPI = {
   requestPasswordResetOtp: (payload) => api.post('/auth/password/request-otp', payload),
   verifyPasswordResetOtp: (payload) => api.post('/auth/password/verify-otp', payload),
   resetPassword: (payload) => api.post('/auth/password/reset', payload),
+  changePassword: (payload) => api.post('/auth/password/change', payload),
   logout: () => api.post('/auth/logout'),
 };

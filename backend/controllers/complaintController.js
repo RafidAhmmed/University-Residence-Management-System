@@ -5,7 +5,7 @@ class ComplaintController {
   // Create a new complaint
   async createComplaint(req, res) {
     try {
-      const { title, description, category, priority } = req.body;
+      const { title, description, category } = req.body;
       const userId = req.user.id; // From auth middleware
       const user = await User.findById(userId).select('allocatedHall allocatedRoom');
 
@@ -17,7 +17,6 @@ class ComplaintController {
         title,
         description,
         category,
-        priority,
         user: userId,
         sourceHall: user.allocatedHall || null,
         sourceRoom: user.allocatedRoom || null,

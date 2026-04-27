@@ -1,5 +1,6 @@
 const userService = require('./userService');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const AuthOtp = require('../models/AuthOtp');
 const emailService = require('./emailService');
 const bcrypt = require('bcryptjs');
@@ -214,7 +215,11 @@ class AuthService {
 
   async requestPasswordResetOtp(email) {
     const normalizedEmail = String(email).trim().toLowerCase();
-    const user = await userService.getUserByEmail(normalizedEmail);
+    const [student, admin] = await Promise.all([
+      userService.getUserByEmail(normalizedEmail),
+      userService.getAdminByEmail(normalizedEmail),
+    ]);
+    const user = student || admin;
     if (!user) {
       throw new Error('No account found with this email');
     }
@@ -285,7 +290,7 @@ class AuthService {
       throw new Error('Password must be at least 6 characters');
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }) || await Admin.findOne({ email: normalizedEmail });
     if (!user) {
       throw new Error('User not found');
     }
@@ -304,7 +309,7 @@ class AuthService {
       throw new Error('Password must be at least 6 characters');
     }
 
-    const user = await User.findById(userId);
+    const user = await userService.getUserById(userId);
     if (!user) {
       throw new Error('User not found');
     }

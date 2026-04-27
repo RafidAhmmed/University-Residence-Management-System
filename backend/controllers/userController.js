@@ -1,9 +1,12 @@
 const userService = require('../services/userService');
 const cloudinary = require('../config/cloudinary');
 const multer = require('multer');
+const Admin = require('../models/Admin');
 const DirectoryOption = require('../models/DirectoryOption');
 const { isValidSession } = require('../utils/sessionOptions');
 const { normalizeDepartmentName } = require('../utils/directoryNormalization');
+const { ADMIN_DESIGNATIONS, normalizeDesignation } = require('../utils/adminDesignations');
+const { ADMIN_HALLS, normalizeAdminHall } = require('../utils/adminHalls');
 const {
   buildStudentEmail,
   normalizeStudentEmail,
@@ -90,6 +93,40 @@ const validateStudentAccountEmail = async (userData) => {
   }
 };
 
+const validateAdminFields = (userData) => {
+  if (userData.role !== 'admin') {
+    return;
+  }
+
+  const designation = normalizeDesignation(userData.designation);
+  const hall = normalizeAdminHall(userData.hall);
+  if (!designation) {
+    throw new Error('Designation is required for admin');
+  }
+  if (!hall) {
+    throw new Error('Hall is required for admin');
+  }
+
+  if (!ADMIN_DESIGNATIONS.includes(designation)) {
+    throw new Error('Invalid designation');
+  }
+  if (!ADMIN_HALLS.includes(hall)) {
+    throw new Error('Invalid hall for admin');
+  }
+
+  userData.designation = designation;
+  userData.hall = hall;
+};
+
+const sanitizeUserResponse = (doc) => {
+  const userObj = doc.toObject();
+  userObj.id = userObj._id;
+  delete userObj._id;
+  delete userObj.password;
+  delete userObj.tokens;
+  return userObj;
+};
+
 class UserController {
   // Static method for multer middleware
   static uploadProfilePicture = upload.single('profilePicture');
@@ -108,12 +145,7 @@ class UserController {
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-      // Return user with id instead of _id for consistency
-      const userObj = user.toObject();
-      userObj.id = userObj._id;
-      delete userObj._id;
-      delete userObj.password; // Don't send password
-      res.json(userObj);
+      res.json(sanitizeUserResponse(user));
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -123,14 +155,7 @@ class UserController {
     try {
       const users = await userService.getAllUsers();
 
-      const sanitizedUsers = users.map((user) => {
-        const userObj = user.toObject();
-        userObj.id = userObj._id;
-        delete userObj._id;
-        delete userObj.password;
-        delete userObj.tokens;
-        return userObj;
-      });
+      const sanitizedUsers = users.map((user) => sanitizeUserResponse(user));
 
       res.json(sanitizedUsers);
     } catch (error) {
@@ -147,6 +172,8 @@ class UserController {
         'gender',
         'phone',
         'role',
+        'designation',
+        'hall',
         'dateOfBirth',
         'session',
         'department',
@@ -170,6 +197,42 @@ class UserController {
         return res.status(404).json({ error: 'User not found' });
       }
 
+      const isExistingAdmin = existingUser.role === 'admin';
+
+      if (isExistingAdmin && filteredData.role === 'user') {
+        return res.status(400).json({ error: 'Cannot convert admin to user without student profile data' });
+      }
+
+      if (!isExistingAdmin && filteredData.role === 'admin') {
+        const promotedAdminData = {
+          name: String(filteredData.name || existingUser.name || '').trim(),
+          email: normalizeStudentEmail(filteredData.email || existingUser.email),
+          phone: String(filteredData.phone || existingUser.phone || '').trim(),
+          gender: filteredData.gender || existingUser.gender,
+          department: filteredData.department || existingUser.department,
+          designation: normalizeDesignation(filteredData.designation),
+          hall: normalizeAdminHall(filteredData.hall || existingUser.allocatedHall),
+          password: existingUser.password,
+          role: 'admin',
+          profilePicture: filteredData.profilePicture || existingUser.profilePicture,
+          tokens: existingUser.tokens || [],
+        };
+
+        validateAdminFields(promotedAdminData);
+
+        const admin = await Admin.create(promotedAdminData);
+        await userService.deleteUser(req.params.id);
+        return res.json(sanitizeUserResponse(admin));
+      }
+
+      if (isExistingAdmin) {
+        delete filteredData.studentId;
+        delete filteredData.session;
+        delete filteredData.allocatedRoom;
+        filteredData.hall = normalizeAdminHall(filteredData.hall || existingUser.hall);
+        filteredData.role = 'admin';
+      }
+
       const nextUserData = {
         ...existingUser.toObject(),
         ...filteredData,
@@ -177,19 +240,19 @@ class UserController {
       };
 
       await validateStudentAccountEmail(nextUserData);
+      validateAdminFields(nextUserData);
+
+      if (isExistingAdmin) {
+        filteredData.designation = nextUserData.designation;
+        filteredData.hall = nextUserData.hall;
+      }
 
       const user = await userService.updateUser(req.params.id, filteredData);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const userObj = user.toObject();
-      userObj.id = userObj._id;
-      delete userObj._id;
-      delete userObj.password;
-      delete userObj.tokens;
-
-      res.json(userObj);
+      res.json(sanitizeUserResponse(user));
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
@@ -231,6 +294,11 @@ class UserController {
         ...profileData,
       });
 
+      validateAdminFields({
+        ...existingUser.toObject(),
+        ...profileData,
+      });
+
       // Handle profile picture upload to Cloudinary
       if (req.file) {
         try {
@@ -266,11 +334,7 @@ class UserController {
       }
 
       // Return user without password and with id instead of _id
-      const userObj = user.toObject();
-      const { password, ...userWithoutPassword } = userObj;
-      userWithoutPassword.id = userWithoutPassword._id;
-      delete userWithoutPassword._id;
-      res.json(userWithoutPassword);
+      res.json(sanitizeUserResponse(user));
     } catch (error) {
       console.error('Profile update error:', error);
       res.status(400).json({ error: error.message });
@@ -279,8 +343,8 @@ class UserController {
 
   async login(req, res) {
     try {
-      const { studentId, password } = req.body;
-      const result = await userService.login(studentId, password);
+      const { email, password } = req.body;
+      const result = await userService.login(email, password);
       res.json(result);
     } catch (error) {
       res.status(401).json({ error: error.message });

@@ -5,6 +5,19 @@ import { userAPI } from '../../api/userApi';
 import { authAPI } from '../../api/authApi';
 import ConfirmModal from '../../components/Common/ConfirmModal';
 
+const ADMIN_DESIGNATIONS = [
+  'Professor',
+  'Associate Professor',
+  'Assistant Professor',
+  'Lecturer',
+  'Adjunct Faculty',
+  'Department Chair',
+  'Dean',
+  'Proctor',
+  'Provost',
+  'Registrar',
+];
+
 const AdminManageUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +27,6 @@ const AdminManageUsersPage = () => {
   const [hallFilter, setHallFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
-  const [updatingRoleUserId, setUpdatingRoleUserId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [fixedOptions, setFixedOptions] = useState({ sessions: [], departments: [], halls: [] });
@@ -25,6 +37,8 @@ const AdminManageUsersPage = () => {
     gender: '',
     phone: '',
     role: 'user',
+    designation: '',
+    hall: '',
     department: '',
     session: '',
     allocatedHall: '',
@@ -81,7 +95,8 @@ const AdminManageUsersPage = () => {
         user.name?.toLowerCase().includes(q) ||
         user.studentId?.toLowerCase().includes(q) ||
         user.email?.toLowerCase().includes(q) ||
-        user.phone?.toLowerCase().includes(q);
+        user.phone?.toLowerCase().includes(q) ||
+        user.designation?.toLowerCase().includes(q);
 
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       const matchesDepartment = !departmentFilter || user.department === departmentFilter;
@@ -97,32 +112,6 @@ const AdminManageUsersPage = () => {
     admins: users.filter((user) => user.role === 'admin').length,
     students: users.filter((user) => user.role === 'user').length,
     filtered: filteredUsers.length,
-  };
-
-  const handleRoleChange = async (id, newRole) => {
-    setUpdatingRoleUserId(id);
-    try {
-      const response = await userAPI.updateUser(id, { role: newRole });
-      const updated = response.data;
-
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === id || user._id === id
-            ? {
-                ...user,
-                role: updated.role || newRole,
-              }
-            : user
-        )
-      );
-
-      toast.success(`User role updated to ${newRole}`);
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error(error.response?.data?.error || 'Failed to update role');
-    } finally {
-      setUpdatingRoleUserId(null);
-    }
   };
 
   const handleDeleteUser = async () => {
@@ -147,6 +136,8 @@ const AdminManageUsersPage = () => {
       gender: user.gender || '',
       phone: user.phone || '',
       role: user.role || 'user',
+      designation: user.designation || '',
+      hall: user.hall || user.allocatedHall || '',
       department: user.department || '',
       session: user.session || '',
       allocatedHall: user.allocatedHall || '',
@@ -171,28 +162,51 @@ const AdminManageUsersPage = () => {
 
   const handleSaveEdit = async () => {
     if (!editingUser) return;
-    if (!editForm.name.trim() || !editForm.studentId.trim() || !editForm.email.trim() || !editForm.phone.trim()) {
-      toast.error('Name, Student ID, Email and Phone are required');
+
+    if (!editForm.name.trim() || !editForm.email.trim() || !editForm.phone.trim()) {
+      toast.error('Name, Email and Phone are required');
+      return;
+    }
+
+    if (editForm.role === 'user' && !editForm.studentId.trim()) {
+      toast.error('Student ID is required for student accounts');
+      return;
+    }
+
+    if (editForm.role === 'admin' && !editForm.designation.trim()) {
+      toast.error('Designation is required for admin accounts');
+      return;
+    }
+
+    if (editForm.role === 'admin' && !editForm.hall.trim()) {
+      toast.error('Hall is required for admin accounts');
       return;
     }
 
     setSavingEdit(true);
     try {
       const userId = editingUser.id || editingUser._id;
-      const response = await userAPI.updateUser(userId, {
+      const payload = {
         name: editForm.name.trim(),
-        studentId: editForm.studentId.trim(),
         email: editForm.email.trim(),
         gender: editForm.gender,
         phone: editForm.phone.trim(),
         role: editForm.role,
         department: editForm.department.trim(),
-        session: editForm.session.trim(),
-        allocatedHall: editForm.allocatedHall.trim(),
-        allocatedRoom: editForm.allocatedRoom.trim(),
-        homeTown: editForm.homeTown.trim(),
-        bloodGroup: editForm.bloodGroup.trim(),
-      });
+        designation: editForm.designation.trim(),
+        hall: editForm.hall.trim(),
+      };
+
+      if (editForm.role === 'user') {
+        payload.studentId = editForm.studentId.trim();
+        payload.session = editForm.session.trim();
+        payload.allocatedHall = editForm.allocatedHall.trim();
+        payload.allocatedRoom = editForm.allocatedRoom.trim();
+        payload.homeTown = editForm.homeTown.trim();
+        payload.bloodGroup = editForm.bloodGroup.trim();
+      }
+
+      const response = await userAPI.updateUser(userId, payload);
 
       const updatedUser = response.data;
       setUsers((prev) =>
@@ -222,6 +236,7 @@ const AdminManageUsersPage = () => {
       'Name',
       'Student ID',
       'Email',
+      'Designation',
       'Gender',
       'Phone',
       'Role',
@@ -236,6 +251,7 @@ const AdminManageUsersPage = () => {
       user.name,
       user.studentId,
       user.email,
+      user.designation,
       user.gender,
       user.phone,
       user.role,
@@ -444,30 +460,23 @@ const AdminManageUsersPage = () => {
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-700">
                           <p>{user.department || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Session: {user.session || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">
+                            {user.role === 'admin' ? `Designation: ${user.designation || 'N/A'}` : `Session: ${user.session || 'N/A'}`}
+                          </p>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-700">
-                          <p>{user.allocatedHall || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Room: {user.allocatedRoom || 'N/A'}</p>
+                          <p>{user.role === 'admin' ? 'N/A' : (user.allocatedHall || 'N/A')}</p>
+                          <p className="text-xs text-gray-500">
+                            {user.role === 'admin' ? 'Room: N/A' : `Room: ${user.allocatedRoom || 'N/A'}`}
+                          </p>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                              user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
-                            }`}>
-                              {user.role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                              {user.role}
-                            </span>
-                            <select
-                              value={user.role}
-                              disabled={updatingRoleUserId === userId}
-                              onChange={(e) => handleRoleChange(userId, e.target.value)}
-                              className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary"
-                            >
-                              <option value="user">user</option>
-                              <option value="admin">admin</option>
-                            </select>
-                          </div>
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+                            user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {user.role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                            {user.role}
+                          </span>
                         </td>
                         <td className="px-4 py-4 text-right">
                           <div className="inline-flex items-center gap-2">
@@ -503,7 +512,7 @@ const AdminManageUsersPage = () => {
           title="Delete User"
           message={
             confirmDeleteUser
-              ? `Are you sure you want to delete ${confirmDeleteUser.name} (${confirmDeleteUser.studentId})? This action cannot be undone.`
+              ? `Are you sure you want to delete ${confirmDeleteUser.name} (${confirmDeleteUser.email})? This action cannot be undone.`
               : 'Are you sure you want to delete this user?'
           }
           confirmText="Delete"
@@ -512,7 +521,7 @@ const AdminManageUsersPage = () => {
         />
 
         {editingUser && (
-          <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-5 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
@@ -530,10 +539,12 @@ const AdminManageUsersPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input name="name" value={editForm.name} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
-                  <input name="studentId" value={editForm.studentId} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
-                </div>
+                {editForm.role === 'user' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
+                    <input name="studentId" value={editForm.studentId} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input type="email" name="email" value={editForm.email} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
@@ -559,6 +570,35 @@ const AdminManageUsersPage = () => {
                     <option value="admin">admin</option>
                   </select>
                 </div>
+                {editForm.role === 'admin' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                    <select name="designation" value={editForm.designation} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                      <option value="">Select designation</option>
+                      {ADMIN_DESIGNATIONS.map((designation) => (
+                        <option key={designation} value={designation}>{designation}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {editForm.role === 'admin' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Hall</label>
+                    <input
+                      list="hall-edit-options"
+                      name="hall"
+                      value={editForm.hall}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                      placeholder="Select Hall"
+                    />
+                    <datalist id="hall-edit-options">
+                      {halls.map((hall) => (
+                        <option key={hall} value={hall} />
+                      ))}
+                    </datalist>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                   <input
@@ -575,60 +615,64 @@ const AdminManageUsersPage = () => {
                     ))}
                   </datalist>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
-                  <input
-                    list="session-edit-options"
-                    name="session"
-                    value={editForm.session}
-                    onChange={handleEditInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                    placeholder="Select Session"
-                  />
-                  <datalist id="session-edit-options">
-                    {sessions.map((session) => (
-                      <option key={session} value={session} />
-                    ))}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-                  <select name="bloodGroup" value={editForm.bloodGroup} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
-                    <option value="">Select</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allocated Hall</label>
-                  <input
-                    list="hall-edit-options"
-                    name="allocatedHall"
-                    value={editForm.allocatedHall}
-                    onChange={handleEditInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                    placeholder="Select Hall"
-                  />
-                  <datalist id="hall-edit-options">
-                    {halls.map((hall) => (
-                      <option key={hall} value={hall} />
-                    ))}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allocated Room</label>
-                  <input name="allocatedRoom" value={editForm.allocatedRoom} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Home Town</label>
-                  <input name="homeTown" value={editForm.homeTown} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
-                </div>
+                {editForm.role === 'user' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
+                      <input
+                        list="session-edit-options"
+                        name="session"
+                        value={editForm.session}
+                        onChange={handleEditInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="Select Session"
+                      />
+                      <datalist id="session-edit-options">
+                        {sessions.map((session) => (
+                          <option key={session} value={session} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
+                      <select name="bloodGroup" value={editForm.bloodGroup} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+                        <option value="">Select</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Allocated Hall</label>
+                      <input
+                        list="hall-edit-options"
+                        name="allocatedHall"
+                        value={editForm.allocatedHall}
+                        onChange={handleEditInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                        placeholder="Select Hall"
+                      />
+                      <datalist id="hall-edit-options">
+                        {halls.map((hall) => (
+                          <option key={hall} value={hall} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Allocated Room</label>
+                      <input name="allocatedRoom" value={editForm.allocatedRoom} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Home Town</label>
+                      <input name="homeTown" value={editForm.homeTown} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 p-5 border-t border-gray-200 bg-gray-50">

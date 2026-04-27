@@ -1,8 +1,11 @@
 const Notice = require('../models/Notice');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
+const path = require('path');
 
 const storage = multer.memoryStorage();
+const ALL_HALLS = 'ALL_HALLS';
 
 const upload = multer({
   storage,
@@ -20,6 +23,44 @@ const upload = multer({
 
 class NoticeController {
   static uploadNoticePdf = upload.single('pdfFile');
+
+  static normalizeHall(hall) {
+    const normalizedHall = String(hall || '').trim();
+    if (!normalizedHall) {
+      throw new Error('Hall is required');
+    }
+
+    return normalizedHall === '__ALL_HALLS__' ? ALL_HALLS : normalizedHall;
+  }
+
+  static normalizeGoogleFormUrl(googleFormUrl) {
+    if (googleFormUrl === undefined) {
+      return undefined;
+    }
+
+    const raw = String(googleFormUrl || '').trim();
+    if (!raw) {
+      return null;
+    }
+
+    const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    let parsed;
+    try {
+      parsed = new URL(withProtocol);
+    } catch {
+      throw new Error('Invalid Google Form URL');
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    const isGoogleFormHost = host === 'forms.gle' || host.endsWith('docs.google.com');
+    const isGoogleFormPath = parsed.pathname.toLowerCase().includes('/forms');
+
+    if (!isGoogleFormHost || (host.endsWith('docs.google.com') && !isGoogleFormPath)) {
+      throw new Error('Invalid Google Form URL');
+    }
+
+    return parsed.toString();
+  }
 
   static async uploadPdfToCloudinary(file, ownerId) {
     return new Promise((resolve, reject) => {
@@ -44,6 +85,34 @@ class NoticeController {
     });
   }
 
+  static async uploadPdfLocally(file, ownerId, req) {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'notices');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const safeOwnerId = String(ownerId || 'admin').replace(/[^a-zA-Z0-9_-]/g, '');
+    const fileName = `notice_${safeOwnerId}_${Date.now()}.pdf`;
+    const filePath = path.join(uploadDir, fileName);
+
+    await fs.promises.writeFile(filePath, file.buffer);
+    return `${req.protocol}://${req.get('host')}/uploads/notices/${fileName}`;
+  }
+
+  static async uploadPdf(file, ownerId, req) {
+    const hasCloudinaryConfig =
+      !!process.env.CLOUDINARY_CLOUD_NAME &&
+      !!process.env.CLOUDINARY_API_KEY &&
+      !!process.env.CLOUDINARY_API_SECRET;
+
+    if (hasCloudinaryConfig) {
+      const uploadResult = await NoticeController.uploadPdfToCloudinary(file, ownerId);
+      return uploadResult.secure_url;
+    }
+
+    return NoticeController.uploadPdfLocally(file, ownerId, req);
+  }
+
   // Create a new notice (admin only)
   async createNotice(req, res) {
     try {
@@ -53,20 +122,15 @@ class NoticeController {
 
       if (req.file) {
         try {
-          const uploadResult = await NoticeController.uploadPdfToCloudinary(req.file, publishedBy);
-          pdfUrl = uploadResult.secure_url;
+          pdfUrl = await NoticeController.uploadPdf(req.file, publishedBy, req);
         } catch (uploadError) {
           console.error('Cloudinary upload error:', uploadError);
           return res.status(500).json({ error: 'Failed to upload notice PDF' });
         }
       }
 
-      const normalizedGoogleFormUrl = googleFormUrl?.trim() || null;
-      const normalizedHall = hall?.trim();
-
-      if (!normalizedHall) {
-        return res.status(400).json({ error: 'Hall is required' });
-      }
+      const normalizedGoogleFormUrl = NoticeController.normalizeGoogleFormUrl(googleFormUrl);
+      const normalizedHall = NoticeController.normalizeHall(hall);
 
       const notice = new Notice({
         title,
@@ -98,7 +162,7 @@ class NoticeController {
       let filter = { isPublished: true };
       if (type) filter.type = type;
       if (hall) {
-        filter.hall = hall;
+        filter.$or = [{ hall }, { hall: ALL_HALLS }];
       }
 
       const notices = await Notice.find(filter)
@@ -151,21 +215,16 @@ class NoticeController {
       if (isPublished !== undefined) updateData.isPublished = isPublished;
 
       if (googleFormUrl !== undefined) {
-        updateData.googleFormUrl = googleFormUrl.trim() || null;
+        updateData.googleFormUrl = NoticeController.normalizeGoogleFormUrl(googleFormUrl);
       }
 
       if (hall !== undefined) {
-        const normalizedHall = hall.trim();
-        if (!normalizedHall) {
-          return res.status(400).json({ error: 'Hall is required' });
-        }
-        updateData.hall = normalizedHall;
+        updateData.hall = NoticeController.normalizeHall(hall);
       }
 
       if (req.file) {
         try {
-          const uploadResult = await NoticeController.uploadPdfToCloudinary(req.file, req.user.id);
-          updateData.pdfUrl = uploadResult.secure_url;
+          updateData.pdfUrl = await NoticeController.uploadPdf(req.file, req.user.id, req);
         } catch (uploadError) {
           console.error('Cloudinary upload error:', uploadError);
           return res.status(500).json({ error: 'Failed to upload notice PDF' });

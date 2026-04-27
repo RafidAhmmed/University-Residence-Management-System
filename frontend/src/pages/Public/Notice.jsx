@@ -12,6 +12,8 @@ const Notice = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const formatHall = (hall) => (!hall || hall === 'ALL_HALLS' ? 'All Halls' : hall);
+
   useEffect(() => {
     const fetchNotices = async () => {
       try {
@@ -21,7 +23,7 @@ const Notice = () => {
           title: notice.title,
           content: notice.content,
           category: notice.type,
-          hall: notice.hall || '',
+          hall: formatHall(notice.hall),
           date: new Date(notice.publishedAt).toISOString().split('T')[0],
           time: new Date(notice.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           author: notice.publishedBy?.name || 'Unknown',

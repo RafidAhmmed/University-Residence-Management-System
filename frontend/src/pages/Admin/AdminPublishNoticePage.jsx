@@ -5,6 +5,28 @@ import { toast } from 'sonner';
 import { noticeAPI } from '../../api/noticeApi';
 import { authAPI } from '../../api/authApi';
 
+const ALL_HALLS_VALUE = '__ALL_HALLS__';
+const ALL_HALLS_LABEL = 'All Halls';
+
+const formatHallLabel = (hall) => (hall === ALL_HALLS_VALUE || hall === 'ALL_HALLS' ? ALL_HALLS_LABEL : hall);
+
+const normalizeGoogleFormUrl = (rawUrl) => {
+  const trimmed = String(rawUrl || '').trim();
+  if (!trimmed) return '';
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const parsed = new URL(withProtocol);
+  const host = parsed.hostname.toLowerCase();
+  const isGoogleFormHost = host === 'forms.gle' || host.endsWith('docs.google.com');
+  const isGoogleFormPath = parsed.pathname.toLowerCase().includes('/forms');
+
+  if (!isGoogleFormHost || (host.endsWith('docs.google.com') && !isGoogleFormPath)) {
+    throw new Error('Please enter a valid Google Form URL');
+  }
+
+  return parsed.toString();
+};
+
 const AdminPublishNoticePage = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -42,7 +64,10 @@ const AdminPublishNoticePage = () => {
     setNoticesLoading(true);
     try {
       const response = await noticeAPI.getAllPublishedNotices();
-      setPreviousNotices(Array.isArray(response.data) ? response.data : []);
+      const notices = Array.isArray(response.data?.notices)
+        ? response.data.notices
+        : (Array.isArray(response.data) ? response.data : []);
+      setPreviousNotices(notices);
     } catch (error) {
       console.error('Error loading previous notices:', error);
       setPreviousNotices([]);
@@ -111,18 +136,14 @@ const AdminPublishNoticePage = () => {
       return false;
     }
 
-    if (!hallOptions.some((hall) => hall.name === formData.hall)) {
+    if (formData.hall !== ALL_HALLS_VALUE && !hallOptions.some((hall) => hall.name === formData.hall)) {
       toast.error('Please select a valid hall');
       return false;
     }
 
     if (formData.googleFormUrl.trim()) {
       try {
-        const parsed = new URL(formData.googleFormUrl.trim());
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-          toast.error('Google Form link must start with http:// or https://');
-          return false;
-        }
+        normalizeGoogleFormUrl(formData.googleFormUrl);
       } catch {
         toast.error('Please enter a valid Google Form URL');
         return false;
@@ -142,7 +163,7 @@ const AdminPublishNoticePage = () => {
 
       toast.success('Notice saved as draft');
       // Reset form or redirect as needed
-    } catch (error) {
+    } catch {
       toast.error('Failed to save draft');
     } finally {
       setLoading(false);
@@ -161,7 +182,7 @@ const AdminPublishNoticePage = () => {
         hall: formData.hall,
       };
       if (formData.googleFormUrl.trim()) {
-        noticeData.googleFormUrl = formData.googleFormUrl.trim();
+        noticeData.googleFormUrl = normalizeGoogleFormUrl(formData.googleFormUrl);
       }
 
       const response = await noticeAPI.createNotice(noticeData, pdfFile);
@@ -304,6 +325,7 @@ const AdminPublishNoticePage = () => {
                     required
                   >
                     <option value="">Select Hall</option>
+                    <option value={ALL_HALLS_VALUE}>{ALL_HALLS_LABEL}</option>
                     {hallOptions.map((hall) => (
                       <option key={hall.name} value={hall.name}>{hall.name}</option>
                     ))}
@@ -426,7 +448,7 @@ const AdminPublishNoticePage = () => {
 
                     {formData.hall && (
                       <div className="text-xs font-medium text-primary-light bg-primary/10 px-3 py-1 rounded-full inline-flex">
-                        Hall: {formData.hall}
+                        Hall: {formatHallLabel(formData.hall)}
                       </div>
                     )}
 
@@ -462,7 +484,7 @@ const AdminPublishNoticePage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Hall:</span>
-                        <span>{formData.hall || 'Not selected'}</span>
+                        <span>{formData.hall ? formatHallLabel(formData.hall) : 'Not selected'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Status:</span>
@@ -535,7 +557,7 @@ const AdminPublishNoticePage = () => {
                       {new Date(notice.publishedAt || notice.createdAt).toLocaleString()}
                     </span>
                     <span className="capitalize">Type: {notice.type || 'general'}</span>
-                    <span>Hall: {notice.hall || '-'}</span>
+                    <span>Hall: {formatHallLabel(notice.hall) || '-'}</span>
                   </div>
 
                   {(notice.pdfUrl || notice.googleFormUrl) && (

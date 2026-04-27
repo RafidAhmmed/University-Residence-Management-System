@@ -85,7 +85,12 @@ const NoticePage = () => {
   };
 
   const currentHallLabel = hallView === 'my' && userHall ? userHall : 'All halls';
-  const getNoticeHallLabel = (notice) => notice.hall || 'All halls';
+  const getNoticeHallLabel = (notice) => {
+    if (!notice.hall || notice.hall === 'ALL_HALLS') {
+      return 'All halls';
+    }
+    return notice.hall;
+  };
   const getHallBadgeClass = (hallName) => {
     const value = String(hallName || 'all-halls').toLowerCase();
     const palette = [
@@ -148,7 +153,7 @@ const NoticePage = () => {
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Home className="w-4 h-4" />
-            <span>{notice.hall || 'All halls'}</span>
+            <span>{getNoticeHallLabel(notice)}</span>
           </div>
         </div>
 

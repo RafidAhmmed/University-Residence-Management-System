@@ -32,6 +32,8 @@ const NoticeDetail = () => {
     { value: 'general', label: 'General', color: 'bg-green-100 text-green-800' }
   ];
 
+  const hallLabel = !notice?.hall || notice.hall === 'ALL_HALLS' ? 'All Halls' : notice.hall;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -129,6 +131,12 @@ const NoticeDetail = () => {
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
               <User size={15} />
               <span>Published by: {notice.publishedBy?.name || 'Unknown'}</span>
+            </div>
+
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-blue-50 text-blue-700">
+                Hall: {hallLabel}
+              </span>
             </div>
 
             <div className="prose prose-lg max-w-none">

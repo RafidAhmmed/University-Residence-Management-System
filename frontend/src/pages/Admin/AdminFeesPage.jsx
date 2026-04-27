@@ -6,6 +6,7 @@ import { feeAPI } from '../../api/feeApi';
 import { authAPI } from '../../api/authApi';
 
 const emptyFeeItem = () => ({
+  id: `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
   feeType: 'hostel',
   title: '',
   amount: '',
@@ -23,13 +24,11 @@ const AdminFeesPage = () => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [options, setOptions] = useState({ sessions: [], departments: [], halls: [] });
   const [filters, setFilters] = useState({
-    role: 'user',
     session: '',
     department: '',
     allocatedHall: '',
     allocatedRoom: '',
   });
-  const [batchName, setBatchName] = useState('');
   const [feeItems, setFeeItems] = useState([emptyFeeItem()]);
 
   useEffect(() => {
@@ -64,7 +63,7 @@ const AdminFeesPage = () => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return users.filter((user) => {
-      if (filters.role && filters.role !== 'all' && user.role !== filters.role) return false;
+      if (user.role !== 'user') return false;
       if (filters.session && user.session !== filters.session) return false;
       if (filters.department && user.department !== filters.department) return false;
       if (filters.allocatedHall && user.allocatedHall !== filters.allocatedHall) return false;
@@ -101,7 +100,6 @@ const AdminFeesPage = () => {
 
     try {
       const payload = {
-        batchName,
         filters,
         targetUserIds: selectedUserIds,
         fees: feeItems.map((item) => ({
@@ -114,7 +112,6 @@ const AdminFeesPage = () => {
       await feeAPI.assignFees(payload);
       toast.success('Fees assigned successfully');
       setSelectedUserIds([]);
-      setBatchName('');
       setFeeItems([emptyFeeItem()]);
       await fetchData();
     } catch (error) {
@@ -159,22 +156,12 @@ const AdminFeesPage = () => {
                 <div className="rounded-xl bg-primary/10 p-3 text-primary"><CreditCard size={22} /></div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Assign New Fees</h2>
-                  <p className="text-sm text-gray-600">Create one batch with several fee categories and an optional late fee.</p>
+                  <p className="text-sm text-gray-600">Create several fee categories and an optional late fee.</p>
                 </div>
               </div>
 
               <form onSubmit={handleAssignFees} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Batch Label</label>
-                    <input
-                      type="text"
-                      value={batchName}
-                      onChange={(e) => setBatchName(e.target.value)}
-                      placeholder="e.g. Spring semester dues"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">Search Users</label>
                     <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-3 focus-within:ring-2 focus-within:ring-primary">
@@ -196,11 +183,6 @@ const AdminFeesPage = () => {
                     <span className="font-semibold">Filters</span>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <select value={filters.role} onChange={(e) => setFilters((current) => ({ ...current, role: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
-                      <option value="all">All Roles</option>
-                      <option value="user">Students</option>
-                      <option value="admin">Admins</option>
-                    </select>
                     <select value={filters.session} onChange={(e) => setFilters((current) => ({ ...current, session: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
                       <option value="">All Sessions</option>
                       {options.sessions.map((session) => (
@@ -242,7 +224,7 @@ const AdminFeesPage = () => {
 
                   <div className="space-y-4">
                     {feeItems.map((item, index) => (
-                      <div key={`${index}-${item.title}`} className="rounded-xl border border-gray-200 bg-surface p-4">
+                      <div key={item.id} className="rounded-xl border border-gray-200 bg-surface p-4">
                         <div className="mb-3 flex items-center justify-between">
                           <p className="font-semibold text-gray-800">Fee #{index + 1}</p>
                           {feeItems.length > 1 && (

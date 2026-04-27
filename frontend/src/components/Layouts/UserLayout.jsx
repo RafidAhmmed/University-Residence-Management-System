@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { User, LogOut, Home, MessageSquare, Bell, Menu, X } from 'lucide-react';
@@ -9,6 +9,9 @@ const UserLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
 
   const handleLogout = async () => {
     try {
@@ -25,10 +28,61 @@ const UserLayout = () => {
     { path: '/user/complaint', label: 'Submit Complaint', icon: <MessageSquare className="w-4 h-4" /> },
   ];
 
+  useEffect(() => {
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      const previousScrollY = lastScrollYRef.current;
+      const delta = currentScrollY - previousScrollY;
+
+      setScrolled(currentScrollY > 10);
+
+      if (currentScrollY <= 10) {
+        setIsNavbarVisible(true);
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
+      if (delta > 6 && !mobileMenuOpen) {
+        setIsNavbarVisible(false);
+      } else if (delta < -6) {
+        setIsNavbarVisible(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    lastScrollYRef.current = window.scrollY;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      setIsNavbarVisible(true);
+    }
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-surface">
+      {!isNavbarVisible && (
+        <div
+          className="fixed top-0 left-0 right-0 h-4 z-20"
+          onMouseEnter={() => setIsNavbarVisible(true)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Navbar */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+      <nav
+        onMouseEnter={() => setIsNavbarVisible(true)}
+        className={`bg-white border-b border-gray-200 sticky top-0 z-30 transition-all duration-300 ${
+          scrolled ? 'shadow-sm' : ''
+        } ${isNavbarVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14">
             <div className="flex items-center gap-6">

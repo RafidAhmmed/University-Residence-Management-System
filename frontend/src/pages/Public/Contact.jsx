@@ -1,15 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Phone, Mail, MapPin, Clock, Send, User, MessageSquare,
+  Phone, Mail, MapPin, Clock,
   Building, AlertTriangle, Globe
 } from 'lucide-react';
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '', email: '', subject: '', message: '', category: 'general'
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const hallContacts = [
     { name: 'Shahid Moushiur Rahman Hall', type: 'Boys Hall', phone: '+880 421 714 221', email: 'smr.hall@just.edu.bd', location: 'West Campus, JUST', officeHours: '9:00 AM - 5:00 PM' },
     { name: 'Munshi Meherullah Hall', type: 'Boys Hall', phone: '+880 421 714 222', email: 'mm.hall@just.edu.bd', location: 'Central Campus, JUST', officeHours: '9:00 AM - 5:00 PM' },
@@ -29,20 +24,6 @@ const Contact = () => {
     { day: 'Thursday (Extended)', hours: '9:00 AM - 5:00 PM' },
     { day: 'Emergency', hours: '24/7 Available' }
   ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({ name: '', email: '', subject: '', message: '', category: 'general' });
-    setIsSubmitting(false);
-  };
 
   const ContactCard = ({ contact, type = 'hall' }) => {
     const Icon = contact.icon || Building;
@@ -94,8 +75,6 @@ const Contact = () => {
     );
   };
 
-  const inputClass = "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none text-sm";
-
   return (
     <div className="min-h-screen bg-surface">
       {/* Banner */}
@@ -134,61 +113,11 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Form + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-          {/* Form */}
-          <div className="bg-white rounded-xl shadow-sm p-7 border border-gray-100">
-            <div className="flex items-center gap-3 mb-5">
-              <MessageSquare size={22} className="text-secondary" />
-              <h2 className="text-xl font-bold text-primary font-heading">Send us a Message</h2>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} required className={inputClass} placeholder="Your full name" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className={inputClass} placeholder="your.email@example.com" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                <select name="category" value={formData.category} onChange={handleInputChange} className={inputClass}>
-                  <option value="general">General Inquiry</option>
-                  <option value="admission">Room Admission</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="complaint">Complaint</option>
-                  <option value="emergency">Emergency</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject *</label>
-                <input type="text" name="subject" value={formData.subject} onChange={handleInputChange} required className={inputClass} placeholder="Brief subject" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Message *</label>
-                <textarea name="message" value={formData.message} onChange={handleInputChange} required rows={4} className={`${inputClass} resize-none`} placeholder="Describe your inquiry..." />
-              </div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-accent text-secondary py-2.5 px-6 rounded-lg font-semibold hover:bg-accent-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-              >
-                {isSubmitting ? (
-                  <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-secondary"></div> Sending...</>
-                ) : (
-                  <><Send size={16} /> Send Message</>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-5">
+        {/* Info + Map */}
+        <div className="mb-10 space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
             {/* Office Hours */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 h-full xl:col-span-2">
               <div className="flex items-center gap-3 mb-4">
                 <Clock size={20} className="text-secondary" />
                 <h2 className="text-lg font-bold text-primary font-heading">Office Hours</h2>
@@ -212,28 +141,42 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Location */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            {/* Location + Map */}
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border border-gray-100 h-full xl:col-span-3">
               <div className="flex items-center gap-3 mb-4">
                 <MapPin size={20} className="text-secondary" />
-                <h2 className="text-lg font-bold text-primary font-heading">Location</h2>
+                <h2 className="text-lg font-bold text-primary font-heading">Location & Map</h2>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <h3 className="font-semibold text-primary text-sm mb-1">University Address</h3>
-                  <p className="text-gray-600 text-sm">
-                    Jashore University of Science and Technology<br />
-                    University Avenue, Churamonkathi<br />
-                    Jashore - 7408, Bangladesh
-                  </p>
-                </div>
+
+              <div className="mb-4">
+                <h3 className="font-semibold text-primary text-sm mb-1">University Address</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Jashore University of Science and Technology<br />
+                  University Avenue, Churamonkathi<br />
+                  Jashore - 7408, Bangladesh
+                </p>
               </div>
-              <div className="mt-5 h-36 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                  <MapPin size={36} className="mx-auto mb-1" />
-                  <p className="text-xs">Interactive Map Coming Soon</p>
-                </div>
+
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <iframe
+                  title="Jashore University of Science and Technology Map"
+                  src="https://www.google.com/maps?q=Jashore%20University%20of%20Science%20and%20Technology&output=embed"
+                  className="w-full h-60 sm:h-[300px] lg:h-[340px]"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
+
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Jashore+University+of+Science+and+Technology"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-secondary hover:text-primary transition-colors"
+              >
+                <MapPin size={14} /> Open in Google Maps
+              </a>
             </div>
           </div>
         </div>

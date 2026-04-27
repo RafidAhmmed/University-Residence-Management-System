@@ -11,13 +11,13 @@ const Facilities = () => {
     {
       id: 'shahid-moushiur-rahman', name: 'Shahid Moushiur Rahman Hall', type: 'boys',
       shortName: 'SMR Hall', capacity: 500, established: 2010,
+      image: '/SMRH.png',
       description: 'Named after the brave freedom fighter, this hall provides excellent facilities for male students with modern amenities and a vibrant community atmosphere.',
       location: 'West Campus',
       facilities: [
-        { icon: Home, name: 'Accommodation', description: '500 single and double occupancy rooms' },
+        { icon: Home, name: 'Accommodation', description: '500 Seats for male students' },
         { icon: Utensils, name: 'Dining Hall', description: 'Modern mess with hygienic food preparation' },
         { icon: BookOpen, name: 'Study Rooms', description: '24/7 study areas with internet access' },
-        { icon: Dumbbell, name: 'Gymnasium', description: 'Fully equipped fitness center' },
         { icon: Wifi, name: 'WiFi Coverage', description: 'High-speed internet throughout the hall' },
         { icon: Shield, name: 'Security', description: '24/7 security with CCTV surveillance' },
         { icon: Car, name: 'Parking', description: 'Dedicated parking for students and visitors' },
@@ -28,53 +28,56 @@ const Facilities = () => {
     {
       id: 'munshi-meherullah', name: 'Munshi Meherullah Hall', type: 'boys',
       shortName: 'MM Hall', capacity: 1000, established: 2024,
+      image: '/MMH.png',
       description: 'A modern residential hall dedicated to academic excellence and personal development, providing a conducive environment for focused studies.',
       location: 'Center Campus',
       facilities: [
-        { icon: Home, name: 'Accommodation', description: '1000 well-furnished rooms' },
-        { icon: Utensils, name: 'Cafeteria', description: 'Multi-cuisine dining options' },
-        { icon: BookOpen, name: 'Library Corner', description: 'Reading room with academic resources' },
-        { icon: Dumbbell, name: 'Sports Facilities', description: 'Indoor games and outdoor sports' },
+        { icon: Home, name: 'Accommodation', description: '1000 Seats for male students' },
+        { icon: Utensils, name: 'Dining Hall', description: 'Modern mess with hygienic food preparation' },
+        { icon: Car, name: 'Parking', description: 'Dedicated parking for students and visitors' },
+        { icon: BookOpen, name: 'Study Rooms', description: '24/7 study areas with internet access' },
         { icon: Wifi, name: 'Internet', description: 'Campus-wide network access' },
         { icon: Shield, name: 'Safety', description: 'Round-the-clock security services' },
         { icon: Car, name: 'Transport', description: 'Shuttle service to academic buildings' },
         { icon: Heart, name: 'Health Center', description: 'On-site medical assistance' }
       ],
-      highlights: ['Biggest boys hall on campus', 'Academic excellence focus', 'Cultural activities center', 'Green and eco-friendly environment']
+      highlights: ['Biggest boys hall on campus', 'Academic excellence focus', 'Cultural activities center', 'Prayer room for religious activities']
     },
     {
       id: 'tapashi-rabeya', name: 'Tapashi Rabeya Hall', type: 'girls',
       shortName: 'TR Hall', capacity: 500, established: 2012,
+      image: '/TRH.png',
       description: 'A safe and nurturing environment for female students, combining academic rigor with personal growth and community building.',
       location: 'South-West Campus',
       facilities: [
-        { icon: Home, name: 'Accommodation', description: '500 comfortable rooms with modern amenities' },
+        { icon: Home, name: 'Accommodation', description: '500 Seats for female students' },
         { icon: Utensils, name: 'Dining Services', description: 'Nutritious and hygienic meal services' },
         { icon: BookOpen, name: 'Study Areas', description: 'Quiet study zones and group study rooms' },
+        { icon: Shield, name: 'Security', description: 'Enhanced security measures for women' },
         { icon: Dumbbell, name: 'Fitness Center', description: 'Women-only gymnasium facilities' },
         { icon: Wifi, name: 'Connectivity', description: 'High-speed internet and communication' },
-        { icon: Shield, name: 'Security', description: 'Enhanced security measures for women' },
         { icon: Car, name: 'Transportation', description: 'Safe transport services' },
         { icon: Heart, name: 'Wellness', description: 'Health and wellness support services' }
       ],
-      highlights: ['Women empowerment focus', 'Safe and secure environment', 'Leadership development programs', 'Community service initiatives']
+      highlights: ['Women empowerment focus', 'Safe and secure environment', 'Internal cultural programs', 'Community service initiatives']
     },
     {
       id: 'bir-protik-taramon-bibi', name: 'Bir Protik Taramon Bibi Hall', type: 'girls',
       shortName: 'BPTB Hall', capacity: 1000, established: 2024,
+      image: '/BPTBH.png',
       description: 'Honoring the brave freedom fighter, this hall inspires courage and determination while providing excellent facilities for academic and personal growth.',
       location: 'South Campus',
       facilities: [
-        { icon: Home, name: 'Accommodation', description: '1000 modern residential units' },
-        { icon: Utensils, name: 'Food Services', description: 'Quality nutrition and dietary services' },
+        { icon: Home, name: 'Accommodation', description: '1000 Seats for female students' },
+        { icon: Utensils, name: 'Dining Services', description: 'Nutritious and hygienic meal services' },
         { icon: BookOpen, name: 'Learning Spaces', description: 'Dedicated academic support areas' },
-        { icon: Dumbbell, name: 'Recreation', description: 'Sports and recreational facilities' },
         { icon: Wifi, name: 'Technology', description: 'Digital learning and connectivity' },
+        { icon: Dumbbell, name: 'Recreation', description: 'Sports and recreational facilities' },
         { icon: Shield, name: 'Protection', description: 'Comprehensive security systems' },
         { icon: Car, name: 'Mobility', description: 'Accessible transportation options' },
         { icon: Heart, name: 'Care', description: 'Holistic health and wellbeing support' }
       ],
-      highlights: ['Inspiration from freedom fighters', 'Innovation and creativity focus', 'Environmental sustainability', 'Cultural heritage preservation']
+      highlights: ['Inspiration from freedom fighters', 'Innovation and creativity focus', 'Environmental sustainability', 'Modern Facilities with a focus on student wellbeing']
     }
   ];
 
@@ -107,10 +110,14 @@ const Facilities = () => {
         <p className="text-white/60 text-sm">{hall.shortName}</p>
       </div>
 
-      {/* Image placeholder */}
-      <div className="h-40 bg-gray-100 flex items-center justify-center">
-        <Home size={48} className="text-gray-300" />
-      </div>
+      {/* Hall image */}
+      {hall.image ? (
+        <img src={hall.image} alt={hall.name} className="h-40 w-full object-cover" />
+      ) : (
+        <div className="h-40 bg-gray-100 flex items-center justify-center">
+          <Home size={48} className="text-gray-300" />
+        </div>
+      )}
 
       {/* Info */}
       <div className="p-5">

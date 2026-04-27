@@ -201,7 +201,7 @@ const HomePage = () => {
             <div className="grid md:grid-cols-2 gap-5">
               {[
                 { name: "Shahid Moushiur Rahman Hall", image: "/SMRH.png" },
-                { name: "Munshi Meherullah Hall", image: "" }
+                { name: "Munshi Meherullah Hall", image: "/MMH.png" }
               ].map((hall, i) => (
                 <div 
                   key={i}
@@ -227,17 +227,21 @@ const HomePage = () => {
             <h3 className="text-xl font-bold text-primary mb-5 text-center font-heading">Female Halls</h3>
             <div className="grid md:grid-cols-2 gap-5">
               {[
-                { name: "Tapashi Rabeya Hall", image: "" },
-                { name: "Bir Protik Taramon Bibi Hall", image: "" }
+                { name: "Tapashi Rabeya Hall", image: "/TRH.png" },
+                { name: "Bir Protik Taramon Bibi Hall", image: "/BPTBH.png" }
               ].map((hall, i) => (
                 <div 
                   key={i}
                   className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-accent card-hover"
                 >
                   <div className="text-center">
-                    <div className="w-full h-44 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                      <Building2 className="w-12 h-12 text-gray-300" />
-                    </div>
+                    {hall.image ? (
+                      <img src={hall.image} alt={hall.name} className="w-full h-44 object-cover rounded-lg mb-4" />
+                    ) : (
+                      <div className="w-full h-44 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                        <Building2 className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
                     <h3 className="text-lg font-bold text-primary font-heading">{hall.name}</h3>
                   </div>
                 </div>
@@ -304,7 +308,9 @@ const HomePage = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:hall@just.edu.bd"
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=rafidahmmed00@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-accent text-secondary font-bold rounded-lg shadow-xl hover:bg-accent-dark hover:shadow-2xl transition-all duration-200"
             >
               Contact Us

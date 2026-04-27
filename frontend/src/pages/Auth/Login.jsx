@@ -213,7 +213,7 @@ const Login = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                  <input id="email" name="email" type="email" placeholder="200107.cse@student.just.edu.bd" value={formData.email} onChange={handleChange}
+                  <input id="email" name="email" type="email" placeholder="id.dept@student.just.edu.bd" value={formData.email} onChange={handleChange}
                     className={`${inputClass} ${errors.email ? errorBorder : normalBorder}`} />
                   {errors.email && <p className="mt-1 text-xs text-danger">{errors.email}</p>}
                 </div>
@@ -293,7 +293,7 @@ const Login = () => {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-4 w-4 text-gray-400" />
                   </div>
-                  <input id="studentId" name="studentId" type="text" placeholder="Enter your Student ID (e.g., 200107)" value={formData.studentId} onChange={handleChange}
+                  <input id="studentId" name="studentId" type="text" placeholder="Enter your Student ID" value={formData.studentId} onChange={handleChange}
                     className={`${inputClass} pl-10 ${errors.studentId ? errorBorder : normalBorder}`} />
                 </div>
                 {errors.studentId && <p className="mt-1 text-xs text-danger">{errors.studentId}</p>}

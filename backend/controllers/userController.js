@@ -4,7 +4,7 @@ const multer = require('multer');
 const Admin = require('../models/Admin');
 const DirectoryOption = require('../models/DirectoryOption');
 const { isValidSession } = require('../utils/sessionOptions');
-const { normalizeDepartmentName } = require('../utils/directoryNormalization');
+const { normalizeDepartmentName, normalizeHallName } = require('../utils/directoryNormalization');
 const { ADMIN_DESIGNATIONS, normalizeDesignation } = require('../utils/adminDesignations');
 const { ADMIN_HALLS, normalizeAdminHall } = require('../utils/adminHalls');
 const {
@@ -51,11 +51,11 @@ const validateFixedFields = async (payload) => {
   }
 
   if (payload.allocatedHall !== undefined && payload.allocatedHall !== null && String(payload.allocatedHall).trim() !== '') {
-    payload.allocatedHall = String(payload.allocatedHall).trim();
+    payload.allocatedHall = normalizeHallName(payload.allocatedHall);
     const exists = await DirectoryOption.exists({
       kind: 'hall',
       isActive: true,
-      name: payload.allocatedHall,
+      name: { $in: [payload.allocatedHall, 'Sheikh Hasina Chitree Hall'] },
     });
 
     if (!exists) {

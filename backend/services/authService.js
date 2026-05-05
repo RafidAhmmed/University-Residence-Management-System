@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const DirectoryOption = require('../models/DirectoryOption');
 const { isValidSession, getSessionOptions } = require('../utils/sessionOptions');
-const { normalizeDepartmentName } = require('../utils/directoryNormalization');
+const { normalizeDepartmentName, normalizeHallName } = require('../utils/directoryNormalization');
 const {
   buildStudentEmail,
   normalizeStudentEmail,
@@ -32,16 +32,25 @@ class AuthService {
         .select('name code -_id'),
     ]);
 
+    const canonicalHalls = Array.from(
+      new Map(
+        halls.map((item) => {
+          const canonicalName = normalizeHallName(item.name);
+          return [canonicalName, { name: canonicalName, code: item.code || '' }];
+        })
+      ).values()
+    );
+
     return {
       sessions: getSessionOptions(),
       departments: departments.map((item) => ({ name: item.name, code: item.code || '' })),
-      halls: halls.map((item) => ({ name: item.name, code: item.code || '' })),
+      halls: canonicalHalls,
     };
   }
 
   async validateDirectoryFields(userData) {
     const department = normalizeDepartmentName(userData.department);
-    const hall = String(userData.allocatedHall || '').trim();
+    const hall = normalizeHallName(userData.allocatedHall);
     const session = String(userData.session || '').trim();
 
     if (!isValidSession(session)) {
@@ -50,7 +59,11 @@ class AuthService {
 
     const [departmentExists, hallExists] = await Promise.all([
       DirectoryOption.exists({ kind: 'department', isActive: true, name: department }),
-      DirectoryOption.exists({ kind: 'hall', isActive: true, name: hall }),
+      DirectoryOption.exists({
+        kind: 'hall',
+        isActive: true,
+        name: { $in: [hall, 'Sheikh Hasina Chitree Hall'] },
+      }),
     ]);
 
     if (!departmentExists) {

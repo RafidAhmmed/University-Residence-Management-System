@@ -1,6 +1,6 @@
 const ADMIN_HALLS = [
   'Shaheed Mashiur Rahman Hall',
-  'Sheikh Hasina Chitree Hall',
+  'Tapashi Rabeya Hall',
   'Munshi Mohammad Meherullah Hall',
   'Birprotik Taramon Bibi Hall',
 ];

@@ -5,6 +5,12 @@ import { userAPI } from '../../api/userApi';
 import { feeAPI } from '../../api/feeApi';
 import { authAPI } from '../../api/authApi';
 
+const tabClasses = (active) => (
+  `rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${active
+    ? 'bg-primary text-white shadow-md'
+    : 'bg-white text-gray-700 hover:bg-gray-100'}`
+);
+
 const emptyFeeItem = () => ({
   id: `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
   feeType: 'hostel',
@@ -16,6 +22,7 @@ const emptyFeeItem = () => ({
 });
 
 const AdminFeesPage = () => {
+  const [activeTab, setActiveTab] = useState('assign');
   const [users, setUsers] = useState([]);
   const [fees, setFees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +37,11 @@ const AdminFeesPage = () => {
     allocatedRoom: '',
   });
   const [feeItems, setFeeItems] = useState([emptyFeeItem()]);
+  const [historyFilters, setHistoryFilters] = useState({
+    status: '',
+    hall: '',
+    studentId: '',
+  });
 
   useEffect(() => {
     fetchData();
@@ -122,6 +134,18 @@ const AdminFeesPage = () => {
     }
   };
 
+  const historyFees = useMemo(() => {
+    const normalizedStudentId = historyFilters.studentId.trim().toLowerCase();
+
+    return fees.filter((fee) => {
+      if (historyFilters.status && fee.status !== historyFilters.status) return false;
+      if (historyFilters.hall && fee.user?.allocatedHall !== historyFilters.hall) return false;
+      if (normalizedStudentId && !String(fee.user?.studentId || '').toLowerCase().includes(normalizedStudentId)) return false;
+
+      return true;
+    });
+  }, [fees, historyFilters]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -134,9 +158,9 @@ const AdminFeesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br surface">
+    <div className="min-h-screen bg-linear-to-br surface">
       <div className="mx-auto max-w-7xl p-4 md:p-8">
-        <div className="mb-8 rounded-2xl bg-gradient-to-r from-primary to-primary-light p-6 text-white shadow-xl md:p-8">
+        <div className="mb-8 rounded-2xl bg-linear-to-r from-primary to-primary-light p-6 text-white shadow-xl md:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold md:text-4xl">Fees & Payments</h1>
@@ -149,194 +173,266 @@ const AdminFeesPage = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-xl bg-primary/10 p-3 text-primary"><CreditCard size={22} /></div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Assign New Fees</h2>
-                  <p className="text-sm text-gray-600">Create several fee categories and an optional late fee.</p>
-                </div>
-              </div>
+        <div className="mb-6 rounded-2xl border border-gray-200 bg-surface p-3">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setActiveTab('assign')} className={tabClasses(activeTab === 'assign')}>
+              Assign Fees
+            </button>
+            <button type="button" onClick={() => setActiveTab('history')} className={tabClasses(activeTab === 'history')}>
+              Search Fee History
+            </button>
+          </div>
+        </div>
 
-              <form onSubmit={handleAssignFees} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+        {activeTab === 'assign' ? (
+          <div className="space-y-6">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-3 text-primary"><CreditCard size={22} /></div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Search Users</label>
-                    <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-3 focus-within:ring-2 focus-within:ring-primary">
-                      <Search size={16} className="text-gray-400" />
+                    <h2 className="text-xl font-bold text-gray-900">Assign New Fees</h2>
+                    <p className="text-sm text-gray-600">Create several fee categories and an optional late fee.</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAssignFees} className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Search Users</label>
+                      <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-3 focus-within:ring-2 focus-within:ring-primary">
+                        <Search size={16} className="text-gray-400" />
+                        <input
+                          type="text"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search by name, ID, email"
+                          className="w-full border-0 p-0 outline-none focus:ring-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-surface p-4">
+                    <div className="mb-4 flex items-center gap-2 text-gray-700">
+                      <Filter size={18} />
+                      <span className="font-semibold">Filters</span>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                      <select value={filters.session} onChange={(e) => setFilters((current) => ({ ...current, session: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
+                        <option value="">All Sessions</option>
+                        {options.sessions.map((session) => (
+                          <option key={session} value={session}>{session}</option>
+                        ))}
+                      </select>
+                      <select value={filters.department} onChange={(e) => setFilters((current) => ({ ...current, department: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
+                        <option value="">All Departments</option>
+                        {options.departments.map((department) => (
+                          <option key={department.name} value={department.name}>{department.name}</option>
+                        ))}
+                      </select>
+                      <select value={filters.allocatedHall} onChange={(e) => setFilters((current) => ({ ...current, allocatedHall: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
+                        <option value="">All Halls</option>
+                        {options.halls.map((hall) => (
+                          <option key={hall.name} value={hall.name}>{hall.name}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search by name, ID, email"
-                        className="w-full border-0 p-0 outline-none focus:ring-0"
+                        value={filters.allocatedRoom}
+                        onChange={(e) => setFilters((current) => ({ ...current, allocatedRoom: e.target.value }))}
+                        placeholder="Room number"
+                        className="rounded-lg border border-gray-300 px-3 py-3"
                       />
                     </div>
                   </div>
-                </div>
 
-                <div className="rounded-2xl bg-surface p-4">
-                  <div className="mb-4 flex items-center gap-2 text-gray-700">
-                    <Filter size={18} />
-                    <span className="font-semibold">Filters</span>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <select value={filters.session} onChange={(e) => setFilters((current) => ({ ...current, session: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
-                      <option value="">All Sessions</option>
-                      {options.sessions.map((session) => (
-                        <option key={session} value={session}>{session}</option>
-                      ))}
-                    </select>
-                    <select value={filters.department} onChange={(e) => setFilters((current) => ({ ...current, department: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
-                      <option value="">All Departments</option>
-                      {options.departments.map((department) => (
-                        <option key={department.name} value={department.name}>{department.name}</option>
-                      ))}
-                    </select>
-                    <select value={filters.allocatedHall} onChange={(e) => setFilters((current) => ({ ...current, allocatedHall: e.target.value }))} className="rounded-lg border border-gray-300 px-3 py-3">
-                      <option value="">All Halls</option>
-                      {options.halls.map((hall) => (
-                        <option key={hall.name} value={hall.name}>{hall.name}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={filters.allocatedRoom}
-                      onChange={(e) => setFilters((current) => ({ ...current, allocatedRoom: e.target.value }))}
-                      placeholder="Room number"
-                      className="rounded-lg border border-gray-300 px-3 py-3"
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Fee Items</h3>
-                      <p className="text-sm text-gray-600">Add one or more fee lines to the selected users.</p>
-                    </div>
-                    <button type="button" onClick={addFeeItem} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-light">
-                      <Plus size={16} /> Add Fee
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {feeItems.map((item, index) => (
-                      <div key={item.id} className="rounded-xl border border-gray-200 bg-surface p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                          <p className="font-semibold text-gray-800">Fee #{index + 1}</p>
-                          {feeItems.length > 1 && (
-                            <button type="button" onClick={() => removeFeeItem(index)} className="text-sm text-red-600 hover:text-red-700">
-                              <span className="inline-flex items-center gap-1"><Trash2 size={14} /> Remove</span>
-                            </button>
-                          )}
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                          <select value={item.feeType} onChange={(e) => updateFeeItem(index, 'feeType', e.target.value)} className="rounded-lg border border-gray-300 px-3 py-3">
-                            <option value="hostel">Hostel Fee</option>
-                            <option value="tuition">Tuition Fee</option>
-                            <option value="mess">Mess Fee</option>
-                            <option value="utility">Utility Fee</option>
-                            <option value="library">Library Fine</option>
-                            <option value="exam">Exam Fee</option>
-                            <option value="other">Other</option>
-                          </select>
-                          <input type="text" value={item.title} onChange={(e) => updateFeeItem(index, 'title', e.target.value)} placeholder="Fee title" className="rounded-lg border border-gray-300 px-3 py-3" />
-                          <input type="number" min="0" value={item.amount} onChange={(e) => updateFeeItem(index, 'amount', e.target.value)} placeholder="Amount" className="rounded-lg border border-gray-300 px-3 py-3" />
-                          <input type="number" min="0" value={item.lateFee} onChange={(e) => updateFeeItem(index, 'lateFee', e.target.value)} placeholder="Late fee" className="rounded-lg border border-gray-300 px-3 py-3" />
-                          <input type="date" value={item.dueDate} onChange={(e) => updateFeeItem(index, 'dueDate', e.target.value)} className="rounded-lg border border-gray-300 px-3 py-3" />
-                          <input type="text" value={item.notes} onChange={(e) => updateFeeItem(index, 'notes', e.target.value)} placeholder="Optional note" className="rounded-lg border border-gray-300 px-3 py-3" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-accent/20 p-4 text-sm text-cyan-900">
-                  <p className="font-semibold">Target preview</p>
-                  <p>{selectedUserIds.length > 0 ? `${selectedUserIds.length} manually selected users` : `${filteredUsers.length} users matched by filters`}</p>
-                </div>
-
-                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-60">
-                  {submitting ? <Loader size={18} className="animate-spin" /> : <CheckCircle size={18} />}
-                  {submitting ? 'Assigning...' : 'Assign Fees'}
-                </button>
-              </form>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Filtered Users</h2>
-                  <p className="text-sm text-gray-600">Choose specific users or rely on the filter rules above.</p>
-                </div>
-                <button type="button" onClick={() => setSelectedUserIds([])} className="text-sm font-medium text-primary hover:text-primary-light">Clear selection</button>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {filteredUsers.map((user) => {
-                  const selected = selectedUserIds.includes(user.id);
-
-                  return (
-                    <button
-                      key={user.id}
-                      type="button"
-                      onClick={() => toggleUser(user.id)}
-                      className={`rounded-xl border p-4 text-left transition-all ${selected ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-600">{user.studentId}</p>
-                        </div>
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${selected ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}>
-                          {selected ? 'Selected' : 'Click to select'}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm text-gray-600">{user.department || 'No department'} · {user.allocatedHall || 'No hall'} · {user.allocatedRoom || 'No room'}</p>
-                    </button>
-                  );
-                })}
-                {!filteredUsers.length && (
-                  <p className="text-sm text-gray-600">No users match the current filters.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Recent Fee Records</h2>
-                <button type="button" onClick={fetchData} className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-light">
-                  <RefreshCw size={16} /> Refresh
-                </button>
-              </div>
-              <div className="space-y-4">
-                {fees.slice(0, 8).map((fee) => (
-                  <div key={fee._id} className="rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-start justify-between gap-4">
+                  <div className="rounded-2xl border border-gray-200 p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-gray-900">{fee.title}</p>
-                        <p className="text-sm text-gray-600">{fee.user?.name} · {fee.user?.studentId}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">Fee Items</h3>
+                        <p className="text-sm text-gray-600">Add one or more fee lines to the selected users.</p>
                       </div>
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${fee.status === 'paid' ? 'bg-green-100 text-green-700' : fee.isOverdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {fee.status === 'paid' ? 'Paid' : fee.isOverdue ? 'Overdue' : 'Unpaid'}
-                      </span>
+                      <button type="button" onClick={addFeeItem} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-light">
+                        <Plus size={16} /> Add Fee
+                      </button>
                     </div>
-                    <div className="mt-3 text-sm text-gray-600">
-                      <p>Due: {new Date(fee.dueDate).toLocaleDateString()}</p>
-                      <p>Amount: ৳{fee.amount}</p>
-                      {fee.lateFee ? <p>Late fee: ৳{fee.lateFee}</p> : null}
+
+                    <div className="space-y-4">
+                      {feeItems.map((item, index) => (
+                        <div key={item.id} className="rounded-xl border border-gray-200 bg-surface p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <p className="font-semibold text-gray-800">Fee #{index + 1}</p>
+                            {feeItems.length > 1 && (
+                              <button type="button" onClick={() => removeFeeItem(index)} className="text-sm text-red-600 hover:text-red-700">
+                                <span className="inline-flex items-center gap-1"><Trash2 size={14} /> Remove</span>
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <select value={item.feeType} onChange={(e) => updateFeeItem(index, 'feeType', e.target.value)} className="rounded-lg border border-gray-300 px-3 py-3">
+                              <option value="hostel">Hostel Fee</option>
+                              <option value="tuition">Tuition Fee</option>
+                              <option value="mess">Mess Fee</option>
+                              <option value="utility">Utility Fee</option>
+                              <option value="library">Library Fine</option>
+                              <option value="exam">Exam Fee</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <input type="text" value={item.title} onChange={(e) => updateFeeItem(index, 'title', e.target.value)} placeholder="Fee title" className="rounded-lg border border-gray-300 px-3 py-3" />
+                            <input type="number" min="0" value={item.amount} onChange={(e) => updateFeeItem(index, 'amount', e.target.value)} placeholder="Amount" className="rounded-lg border border-gray-300 px-3 py-3" />
+                            <input type="number" min="0" value={item.lateFee} onChange={(e) => updateFeeItem(index, 'lateFee', e.target.value)} placeholder="Late fee" className="rounded-lg border border-gray-300 px-3 py-3" />
+                            <input type="date" value={item.dueDate} onChange={(e) => updateFeeItem(index, 'dueDate', e.target.value)} className="rounded-lg border border-gray-300 px-3 py-3" />
+                            <input type="text" value={item.notes} onChange={(e) => updateFeeItem(index, 'notes', e.target.value)} placeholder="Optional note" className="rounded-lg border border-gray-300 px-3 py-3" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-                {!fees.length && <p className="text-sm text-gray-600">No fee records yet.</p>}
+
+                  <div className="rounded-2xl bg-accent/20 p-4 text-sm text-cyan-900">
+                    <p className="font-semibold">Target preview</p>
+                    <p>{selectedUserIds.length > 0 ? `${selectedUserIds.length} manually selected users` : `${filteredUsers.length} users matched by filters`}</p>
+                  </div>
+
+                  <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-60">
+                    {submitting ? <Loader size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                    {submitting ? 'Assigning...' : 'Assign Fees'}
+                  </button>
+                </form>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Filtered Users</h2>
+                    <p className="text-sm text-gray-600">Choose specific users or rely on the filter rules above.</p>
+                  </div>
+                  <button type="button" onClick={() => setSelectedUserIds([])} className="text-sm font-medium text-primary hover:text-primary-light">Clear selection</button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredUsers.map((user) => {
+                    const selected = selectedUserIds.includes(user.id);
+
+                    return (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => toggleUser(user.id)}
+                        className={`rounded-xl border p-4 text-left transition-all ${selected ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">{user.name}</p>
+                            <p className="text-sm text-gray-600">{user.studentId}</p>
+                          </div>
+                          <span className={`rounded-full px-2 py-1 text-xs font-medium ${selected ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}>
+                            {selected ? 'Selected' : 'Click to select'}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm text-gray-600">{user.department || 'No department'} · {user.allocatedHall || 'No hall'} · {user.allocatedRoom || 'No room'}</p>
+                      </button>
+                    );
+                  })}
+                  {!filteredUsers.length && (
+                    <p className="text-sm text-gray-600">No users match the current filters.</p>
+                  )}
+                </div>
               </div>
             </div>
+        ) : (
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Fee History Search</h2>
+                <p className="text-sm text-gray-600">Search all assigned fees by payment status, hall, and student ID.</p>
+              </div>
+              <button type="button" onClick={fetchData} className="inline-flex items-center gap-2 rounded-lg border border-primary/30 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5">
+                <RefreshCw size={16} /> Refresh history
+              </button>
+            </div>
+
+            <div className="mb-6 grid gap-4 rounded-2xl bg-surface p-4 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Payment Status</label>
+                <select
+                  value={historyFilters.status}
+                  onChange={(e) => setHistoryFilters((current) => ({ ...current, status: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-3"
+                >
+                  <option value="">All</option>
+                  <option value="paid">Paid</option>
+                  <option value="unpaid">Unpaid</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Hall Name</label>
+                <select
+                  value={historyFilters.hall}
+                  onChange={(e) => setHistoryFilters((current) => ({ ...current, hall: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-3"
+                >
+                  <option value="">All</option>
+                  {options.halls.map((hall) => (
+                    <option key={hall.name} value={hall.name}>{hall.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Student ID</label>
+                <div className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-3 focus-within:ring-2 focus-within:ring-primary">
+                  <Search size={16} className="text-gray-400" />
+                  <input
+                    type="text"
+                    value={historyFilters.studentId}
+                    onChange={(e) => setHistoryFilters((current) => ({ ...current, studentId: e.target.value }))}
+                    placeholder="Enter student ID"
+                    className="w-full border-0 p-0 outline-none focus:ring-0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-semibold">{historyFees.length}</span> fee record{historyFees.length === 1 ? '' : 's'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setHistoryFilters({ status: '', hall: '', studentId: '' })}
+                className="text-sm font-medium text-primary hover:text-primary-light"
+              >
+                Clear filters
+              </button>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {historyFees.map((fee) => (
+                <div key={fee._id} className="rounded-xl border border-gray-200 p-4">
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">{fee.title}</p>
+                      <p className="text-sm text-gray-600">{fee.user?.name || 'Unknown user'}</p>
+                    </div>
+                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${fee.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {fee.status === 'paid' ? 'Paid' : 'Unpaid'}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>Student ID: {fee.user?.studentId || 'N/A'}</p>
+                    <p>Hall: {fee.user?.allocatedHall || 'N/A'}</p>
+                    <p>Amount: ৳{fee.amount}</p>
+                    <p>Due Date: {fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                </div>
+              ))}
+              {!historyFees.length && (
+                <p className="text-sm text-gray-600">No fee history matches your current search.</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

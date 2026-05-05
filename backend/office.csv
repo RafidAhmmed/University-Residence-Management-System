@@ -66,7 +66,7 @@ id,name,name_bn,type,parent_id,code,description,display_order,is_active
 65,Technology Transfer Office,প্রযুক্তি স্থানান্তর অফিস,office,3,TTO,Technology Transfer Office,650,true
 66,Guest House (Dhaka & Jashore),গেস্ট হাউস (ঢাকা ও যশোর),facility,2,GH,Guest Houses,660,true
 67,Shaheed Mashiur Rahman Hall,শহীদ মশিউর রহমান হল,hall,,SMR-HALL,Male Residential Hall,670,true
-68,Sheikh Hasina Chitree Hall,শেখ হাসিনা চিত্রী হল,hall,,SHC-HALL,Female Residential Hall,680,true
+68,Tapashi Rabeya Hall,তাপসী রাবেয়া হল,hall,,SHC-HALL,Female Residential Hall,680,true
 69,Munshi Mohammad Meherullah Hall,মুন্সী মোহাম্মদ মেহেরউল্লাহ হল,hall,,MMM-HALL,Male Residential Hall,690,true
 70,Birprotik Taramon Bibi Hall,বীরপ্রতীক তারামন বিবি হল,hall,,BTB-HALL,Female Residential Hall,700,true
 71,Dr. M.A. Wazed Miah Institute of Advance Studies,ড. এম.এ. ওয়াজেদ মিয়া উন্নত অধ্যয়ন ইনস্টিটিউট,institute,,MAWMIAS,Research Institute,710,true

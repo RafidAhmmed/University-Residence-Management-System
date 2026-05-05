@@ -10,7 +10,7 @@ const NoticePage = () => {
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [hallView, setHallView] = useState('my');
 
-  const userHall = user?.allocatedHall || '';
+  const userHall = user?.allocatedHall || user?.hall || '';
   const userId = user?.id || 'guest';
   const readStorageKey = `readNotices:${userId}`;
 
@@ -37,7 +37,8 @@ const NoticePage = () => {
           hall: hallView === 'my' ? userHall : undefined,
         });
         const readNoticeIds = getReadNoticeIds();
-        const noticesWithReadState = (response.data.notices || []).map((notice) => {
+        const noticeList = Array.isArray(response.data?.notices) ? response.data.notices : [];
+        const noticesWithReadState = noticeList.map((notice) => {
           const noticeId = notice._id || notice.id;
           return {
             ...notice,

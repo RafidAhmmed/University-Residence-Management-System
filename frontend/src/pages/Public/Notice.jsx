@@ -13,19 +13,30 @@ const Notice = () => {
   const [error, setError] = useState(null);
 
   const formatHall = (hall) => (!hall || hall === 'ALL_HALLS' ? 'All Halls' : hall);
+  const normalizeNoticeList = (data) => {
+    if (Array.isArray(data?.notices)) {
+      return data.notices;
+    }
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return [];
+  };
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
         const response = await noticeAPI.getAllNotices();
-        const fetchedNotices = response.data.notices.map(notice => ({
+        const fetchedNotices = normalizeNoticeList(response.data).map((notice) => ({
           id: notice._id,
           title: notice.title,
           content: notice.content,
           category: notice.type,
           hall: formatHall(notice.hall),
-          date: new Date(notice.publishedAt).toISOString().split('T')[0],
-          time: new Date(notice.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          date: new Date(notice.publishedAt || notice.createdAt || Date.now()).toISOString().split('T')[0],
+          time: new Date(notice.publishedAt || notice.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           author: notice.publishedBy?.name || 'Unknown',
           pdfUrl: notice.pdfUrl,
           googleFormUrl: notice.googleFormUrl,
@@ -52,7 +63,7 @@ const Notice = () => {
 
   const hallOptions = [
     'all',
-    'Shahid Moushiur Rahman Hall',
+    'Shaheed Mashiur Rahman Hall',
     'Munshi Meherullah Hall',
     'Tapashi Rabeya Hall',
     'Bir Protik Taramon Bibi Hall',

@@ -11,23 +11,68 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
-      setToken(token);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    let isMounted = true;
+
+    const hydrateAuthState = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (!storedToken || !storedUser) {
+        if (isMounted) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (isMounted) {
+          setToken(storedToken);
+          setUser(parsedUser);
+        }
+
+        if (parsedUser?.id) {
+          const response = await userAPI.getUser(parsedUser.id);
+          if (isMounted) {
+            setUser(response.data);
+            localStorage.setItem('user', JSON.stringify(response.data));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to hydrate stored auth state:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    hydrateAuthState();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
       const data = response.data;
+      let userData = data.user;
+
+      if (userData?.id) {
+        try {
+          const profileResponse = await userAPI.getUser(userData.id);
+          userData = profileResponse.data;
+        } catch (profileError) {
+          console.error('Failed to hydrate user profile after login:', profileError);
+        }
+      }
+
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(userData));
       setToken(data.token);
-      setUser(data.user);
+      setUser(userData);
       return data;
     } catch (error) {
       throw new Error(error.response?.data?.error || 'Login failed');

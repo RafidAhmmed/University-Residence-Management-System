@@ -90,7 +90,7 @@ const UserProfile = () => {
     if (user && user.id) {
       loadUserProfile();
     }
-  }, []);
+  }, [user?.id, fetchUserProfile]);
 
   useEffect(() => {
     const loadFixedOptions = async () => {

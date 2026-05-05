@@ -24,7 +24,7 @@ const DEFAULT_ADMINS = [
     phone: '01710000002',
     gender: 'female',
     designation: 'Provost',
-    hall: 'Sheikh Hasina Chitree Hall',
+    hall: 'Tapashi Rabeya Hall',
   },
   {
     name: 'MMM Hall Admin',

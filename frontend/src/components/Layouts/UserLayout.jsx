@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { User, LogOut, Home, MessageSquare, Bell, Menu, X } from 'lucide-react';
+import { User, LogOut, Home, MessageSquare, Bell, Menu, X, Utensils } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -24,6 +24,7 @@ const UserLayout = () => {
 
   const navItems = [
     { path: '/user/profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
+    { path: '/user/meals', label: 'Meals', icon: <Utensils className="w-4 h-4" /> },
     { path: '/user/notices', label: 'Notices', icon: <Bell className="w-4 h-4" /> },
     { path: '/user/complaint', label: 'Submit Complaint', icon: <MessageSquare className="w-4 h-4" /> },
   ];

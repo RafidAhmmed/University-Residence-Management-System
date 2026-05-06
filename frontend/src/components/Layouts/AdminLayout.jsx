@@ -10,7 +10,8 @@ import {
   UserCog,
   MessageSquare,
   Bell,
-  CreditCard
+  CreditCard,
+  Utensils
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
@@ -53,6 +54,12 @@ const AdminLayout = () => {
       ]
     },
     {
+      header: 'Meals',
+      items: [
+        { path: '/admin/meals', icon: Utensils, label: 'Meals' },
+      ]
+    },
+    {
       header: 'Account',
       items: [
         { path: '/admin/profile', icon: User, label: 'My Profile' }
@@ -76,7 +83,7 @@ const AdminLayout = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-full bg-primary text-white transition-transform duration-300 z-40 ${
+      <aside className={`fixed left-0 top-0 h-full bg-primary text-white transition-transform duration-300 z-40 flex flex-col ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } w-64`}>
         {/* Sidebar Header */}
@@ -96,7 +103,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="p-4 space-y-1.5">
+        <nav className="flex-1 overflow-y-hidden hover:overflow-y-auto px-4 py-4 space-y-1.5">
           {menuItems.map((section) => {
             if (section.path) {
               const Icon = section.icon;
@@ -113,7 +120,7 @@ const AdminLayout = () => {
                       : 'hover:bg-white/10 text-white/85'
                   }`}
                 >
-                  <Icon size={18} className="flex-shrink-0" />
+                  <Icon size={18} className="shrink-0" />
                   <span>{section.label}</span>
                 </Link>
               );
@@ -139,7 +146,7 @@ const AdminLayout = () => {
                           : 'hover:bg-white/10 text-white/85'
                       }`}
                     >
-                      <Icon size={18} className="flex-shrink-0" />
+                      <Icon size={18} className="shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -149,25 +156,21 @@ const AdminLayout = () => {
           })}
         </nav>
 
-        {/* Back to Site */}
-        <div className="absolute bottom-20 left-0 right-0 px-4">
+        <div className="px-4 pb-4 pt-4 border-t border-white/10 space-y-3">
           <Link
             to="/"
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-all text-white/65 hover:text-white text-sm"
           >
-            <Home size={18} className="flex-shrink-0" />
+            <Home size={18} className="shrink-0" />
             <span>Back to Site</span>
           </Link>
-        </div>
 
-        {/* Logout */}
-        <div className="absolute bottom-4 left-0 right-0 px-4">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-danger/20 transition-all border border-white/15 hover:border-danger/50 text-sm"
           >
-            <LogOut size={18} className="flex-shrink-0" />
+            <LogOut size={18} className="shrink-0" />
             <span>Logout</span>
           </button>
         </div>

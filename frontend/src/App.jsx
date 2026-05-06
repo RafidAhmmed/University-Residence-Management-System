@@ -18,9 +18,13 @@ import AdminPublishNoticePage from './pages/Admin/AdminPublishNoticePage';
 import AdminFeesPage from './pages/Admin/AdminFeesPage';
 import AdminManageUsersPage from './pages/Admin/AdminManageUsersPage';
 import AdminProfilePage from './pages/Admin/AdminProfilePage';
+import AdminMealPricePage from './pages/Admin/AdminMealPricePage';
+import AdminMealClosuresPage from './pages/Admin/AdminMealClosuresPage';
+import AdminMealsPage from './pages/Admin/AdminMealsPage';
 import UserProfile from './pages/User/UserProfile';
 import ComplaintPage from './pages/User/ComplaintPage';
 import NoticePage from './pages/User/NoticePage';
+import StudentMealPage from './pages/User/StudentMealPage';
 import Notice from './pages/Public/Notice';
 import NoticeDetail from './pages/Public/NoticeDetail';
 import Facilities from './pages/Public/Facilities';
@@ -64,6 +68,9 @@ function App() {
             <Route path="publish-notice" element={<AdminPublishNoticePage />} />
             <Route path="fees" element={<AdminFeesPage />} />
             <Route path="manage-users" element={<AdminManageUsersPage />} />
+            <Route path="meals" element={<AdminMealsPage />} />
+            <Route path="meal-prices" element={<AdminMealPricePage />} />
+            <Route path="meal-closures" element={<AdminMealClosuresPage />} />
             <Route path="profile" element={<AdminProfilePage />} />
           </Route>
 
@@ -71,6 +78,7 @@ function App() {
           <Route path="/user" element={<UserRoute><UserLayout /></UserRoute>}>
             <Route path="profile" element={<UserProfile />} />
             <Route path="complaint" element={<ComplaintPage />} />
+            <Route path="meals" element={<StudentMealPage />} />
             <Route path="notices" element={<NoticePage />} />
           </Route>
 

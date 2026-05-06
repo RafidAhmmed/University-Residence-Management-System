@@ -49,6 +49,7 @@ app.use('/api/users', require('./routers/userRouter'));
 app.use('/api/complaints', require('./routers/complaintRouter'));
 app.use('/api/notices', require('./routers/noticeRouter'));
 app.use('/api/fees', require('./routers/feeRouter'));
+app.use('/api/meals', require('./routers/mealRouter'));
 
 const PORT = process.env.PORT || 5000;
 
